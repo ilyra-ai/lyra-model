@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import type { PanelGroupImperativeHandle } from "react-resizable-panels"; // Importação corrigida com 'type'
 import { MainSidebar } from "@/components/main-sidebar";
 import { cn } from "@/lib/utils";
 
@@ -153,6 +154,8 @@ export default function AIPage() {
   const [logsContent, setLogsContent] = useState("Nenhum log disponível.");
   const [metricsPlotUrl, setMetricsPlotUrl] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Novo estado para a barra lateral
+
+  const panelGroupRef = useRef<PanelGroupImperativeHandle>(null); // Ref para o ResizablePanelGroup
 
 
   // Configurações do modelo (para a aba de configurações)
@@ -430,25 +433,42 @@ export default function AIPage() {
     }
   };
 
+  // Função para alternar o recolhimento da sidebar usando a ref do PanelGroup
+  const toggleSidebarCollapse = () => {
+    if (panelGroupRef.current) {
+      const sidebarPanel = panelGroupRef.current.getPanel("sidebar-panel");
+      if (sidebarPanel) {
+        if (sidebarPanel.isCollapsed()) {
+          sidebarPanel.expand();
+        } else {
+          sidebarPanel.collapse();
+        }
+      }
+    }
+  };
+
   return (
     <div className="flex h-screen w-full flex-col items-start bg-background text-foreground font-[family-name:var(--font-geist-sans)]">
-      <ResizablePanelGroup direction="horizontal">
+      <ResizablePanelGroup
+        direction="horizontal"
+        ref={panelGroupRef} // Atribuir a ref ao PanelGroup
+      >
         <ResizablePanel
+          id="sidebar-panel" // Adicionar um ID ao painel da sidebar
           defaultSize={18}
-          minSize={4} // Tamanho mínimo quando recolhido (para mostrar apenas o ícone)
-          maxSize={25} // Tamanho máximo quando expandido
-          collapsedSize={4} // Tamanho quando explicitamente recolhido
+          minSize={4}
+          maxSize={25}
+          collapsedSize={4}
           collapsible={true}
           onCollapse={() => setIsSidebarCollapsed(true)}
           onExpand={() => setIsSidebarCollapsed(false)}
-          // Removido: collapsed={isSidebarCollapsed}
         >
           <MainSidebar
             activeView={activeView}
             onSelectView={setActiveView}
             onSelectModelType={handleSelectModelTypeFromSidebar}
-            isCollapsed={isSidebarCollapsed} // Passa o estado de recolhimento
-            onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)} // Passa a função de alternar
+            isCollapsed={isSidebarCollapsed}
+            onToggleCollapse={toggleSidebarCollapse} // Usar a nova função
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
