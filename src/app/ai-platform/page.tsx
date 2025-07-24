@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { MainSidebar } from "@/components/main-sidebar"; // Import the new sidebar component
+import { MainSidebar } from "@/components/main-sidebar";
 
 import {
   Info, MessageCircle, UserCog2, Book, Settings,
@@ -566,7 +566,7 @@ export default function AIPage() {
                   ← Voltar ao Chat
                 </Button>
                 <Tabs value={activeView.replace('settings-', '')} onValueChange={(value) => setActiveView(`settings-${value}`)} className="w-full">
-                  <TabsList className="grid w-full grid-cols-6"> {/* Adjusted grid-cols to 6 */}
+                  <TabsList className="grid w-full grid-cols-6">
                     <TabsTrigger value="model">⚙️ Configurações do Modelo</TabsTrigger>
                     <TabsTrigger value="upload">📁 Upload de Dados</TabsTrigger>
                     <TabsTrigger value="training">🧠 Treinamento</TabsTrigger>
