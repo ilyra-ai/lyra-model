@@ -12,8 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import type { PanelGroupRef } from "react-resizable-panels"; // Importado diretamente de react-resizable-panels
+import { ResizablePanel, ResizablePanelGroup, type PanelGroupRef } from "@/components/ui/resizable"; // Importado de @/components/ui/resizable
 import { MainSidebar } from "@/components/main-sidebar";
 import { cn } from "@/lib/utils";
 
@@ -769,7 +768,7 @@ export default function AIPage() {
                           max={1024}
                           step={64}
                           value={[modelConfig.d_model]}
-                          onValueChange={(val) => setModelConfig({ ...modelConfig, d_model: val[0] })}
+                          onValueChange={(val) => setModelConfig({ ...model(val) })}
                         />
                       </div>
                       <div>
