@@ -12,8 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import type { PanelGroupRef } from "react-resizable-panels"; // Importação corrigida para PanelGroupRef
+import { ResizablePanel, ResizablePanelGroup, type PanelGroupRef } from "@/components/ui/resizable"; // Importação corrigida
 import { MainSidebar } from "@/components/main-sidebar";
 import { cn } from "@/lib/utils";
 
@@ -155,7 +154,7 @@ export default function AIPage() {
   const [metricsPlotUrl, setMetricsPlotUrl] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Novo estado para a barra lateral
 
-  const panelGroupRef = useRef<PanelGroupRef>(null); // Ref para o ResizablePanelGroup com o tipo corrigido
+  const panelGroupRef = useRef<PanelGroupRef>(null); // Ref para o ResizablePanelGroup
 
 
   // Configurações do modelo (para a aba de configurações)
@@ -471,7 +470,7 @@ export default function AIPage() {
             onToggleCollapse={toggleSidebarCollapse} // Usar a nova função
           />
         </ResizablePanel>
-        <ResizableHandle /> {/* Removido a prop 'withHandle' */}
+        {/* Removido ResizableHandle */}
         <ResizablePanel defaultSize={82}>
           {/* Header */}
           <div className="flex w-full items-center justify-between px-3 py-3 border-b border-border bg-card">
