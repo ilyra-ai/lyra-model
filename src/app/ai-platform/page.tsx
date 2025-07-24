@@ -293,12 +293,30 @@ export default function AIPage() {
   const handleTrainModel = async () => {
     setIsLoading(true);
     toast.info("Iniciando treinamento do modelo...");
-    await new Promise((resolve) => setTimeout(resolve, 5000)); // Simula atraso
-    toast.success("Treinamento simulado concluído!");
-    setIsLoading(false);
-    // No mundo real, você iniciaria o treinamento no backend aqui.
-    // Para simular a geração de um gráfico, podemos definir uma URL de imagem de placeholder
-    setMetricsPlotUrl("/placeholder-metrics.png"); // Você precisaria de uma imagem de placeholder em /public
+    try {
+      const response = await fetch('/api/train', { // Endpoint hipotético para iniciar o treinamento
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ modelConfig, trainingConfig }), // Envia as configurações do modelo e treinamento
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      toast.success("Treinamento iniciado com sucesso!");
+      // O backend deve retornar a URL do gráfico de métricas, se houver
+      if (data.metricsPlotUrl) {
+        setMetricsPlotUrl(data.metricsPlotUrl);
+      } else {
+        setMetricsPlotUrl(null); // Limpa o gráfico anterior se não houver um novo
+      }
+    } catch (error) {
+      console.error("Erro ao iniciar treinamento:", error);
+      toast.error("Erro ao iniciar treinamento. Verifique o backend.");
+      setMetricsPlotUrl(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSaveConfig = () => {
@@ -309,20 +327,39 @@ export default function AIPage() {
   const handleGetLogs = async () => {
     setIsLoading(true);
     toast.info("Carregando logs...");
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simula atraso
-    const simulatedLogs = `[${new Date().toLocaleString()}] INFO - Log de exemplo 1\n[${new Date().toLocaleString()}] WARNING - Aviso de exemplo 2\n[${new Date().toLocaleString()}] ERROR - Erro de exemplo 3\n[${new Date().toLocaleString()}] INFO - Mais um log...`;
-    setLogsContent(simulatedLogs);
-    toast.success("Logs carregados (simulado)!");
-    setIsLoading(false);
+    try {
+      const response = await fetch('/api/logs'); // Endpoint hipotético para buscar logs
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setLogsContent(data.logs || "Nenhum log disponível.");
+      toast.success("Logs carregados!");
+    } catch (error) {
+      console.error("Erro ao carregar logs:", error);
+      setLogsContent("Erro ao carregar logs.");
+      toast.error("Erro ao carregar logs. Verifique o backend.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClearLogs = async () => {
     setIsLoading(true);
     toast.info("Limpando logs...");
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simula atraso
-    setLogsContent(`Logs limpos em ${new Date().toLocaleString()}\n`);
-    toast.success("Logs limpos (simulado)!");
-    setIsLoading(false);
+    try {
+      const response = await fetch('/api/clear-logs', { method: 'POST' }); // Endpoint hipotético para limpar logs
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      setLogsContent(`Logs limpos em ${new Date().toLocaleString()}\n`);
+      toast.success("Logs limpos!");
+    } catch (error) {
+      console.error("Erro ao limpar logs:", error);
+      toast.error("Erro ao limpar logs. Verifique o backend.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSaveApiKeys = () => {
@@ -769,7 +806,7 @@ export default function AIPage() {
                         <Label htmlFor="fine_tune_base">Modelo Base para Fine-tuning</Label>
                         <Input id="fine_tune_base" placeholder="Nenhum" defaultValue="Nenhum" />
                       </div>
-                      <Button onClick={handleTrainModel} className="w-full">
+                      <Button onClick={handleTrainModel} className="w-full" disabled={isLoading}>
                         <Sparkles className="h-4 w-4 mr-2" /> Iniciar Treinamento
                       </Button>
                       {metricsPlotUrl && (
