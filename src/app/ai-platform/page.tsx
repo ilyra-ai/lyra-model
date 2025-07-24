@@ -18,7 +18,7 @@ import {
   Laptop, Sparkles, LogOut, Cloud, FilePlus2,
   Paperclip, Globe, ArrowUp, Image, PencilLine,
   FileText, TerminalSquare, Lightbulb, Upload, Download,
-  Video, ScrollText, Trash2
+  Video, ScrollText, Trash2, Key
 } from "lucide-react";
 
 // Placeholder para os modelos de IA (adaptado do script Python)
@@ -61,7 +61,16 @@ const defaultConfig = {
   },
   selected_model: "GPT-2",
   installed_models: [],
-  api_keys: {}
+  api_keys: {
+    openai: "",
+    anthropic: "",
+    runway: "",
+    midjourney: "",
+    google: "",
+    meta: "",
+    baidu: "",
+    microsoft: ""
+  }
 };
 
 export default function AIPage() {
@@ -80,6 +89,7 @@ export default function AIPage() {
   const [trainingConfig, setTrainingConfig] = useState(defaultConfig.training);
   const [generationConfig, setGenerationConfig] = useState(defaultConfig.generation);
   const [uiConfig, setUiConfig] = useState(defaultConfig.ui);
+  const [apiKeys, setApiKeys] = useState(defaultConfig.api_keys);
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
@@ -238,6 +248,11 @@ export default function AIPage() {
     setLogsContent(`Logs limpos em ${new Date().toLocaleString()}\n`);
     toast.success("Logs limpos (simulado)!");
     setIsLoading(false);
+  };
+
+  const handleSaveApiKeys = () => {
+    // No mundo real, você enviaria as chaves de API para o backend para persistência segura.
+    toast.success("Chaves de API salvas (simulado)!");
   };
 
   return (
@@ -424,11 +439,12 @@ export default function AIPage() {
               ← Voltar ao Chat
             </Button>
             <Tabs defaultValue="model-settings" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5"> {/* Updated grid-cols to 5 */}
                 <TabsTrigger value="model-settings">⚙️ Configurações do Modelo</TabsTrigger>
                 <TabsTrigger value="upload-data">📁 Upload de Dados</TabsTrigger>
                 <TabsTrigger value="training">🧠 Treinamento</TabsTrigger>
                 <TabsTrigger value="logs">📜 Logs</TabsTrigger>
+                <TabsTrigger value="api-keys">🔑 Chaves de API</TabsTrigger> {/* New Tab Trigger */}
                 <TabsTrigger value="customize">🎨 Customizar UI</TabsTrigger>
               </TabsList>
               <TabsContent value="model-settings" className="p-4 border rounded-md mt-4 bg-card">
@@ -601,6 +617,97 @@ export default function AIPage() {
                       <Trash2 className="h-4 w-4 mr-2" /> Limpar Logs
                     </Button>
                   </div>
+                </div>
+              </TabsContent>
+
+              {/* New API Keys Tab */}
+              <TabsContent value="api-keys" className="p-4 border rounded-md mt-4 bg-card">
+                <h2 className="text-xl font-semibold mb-4">Chaves de API</h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Insira suas chaves de API para provedores de IA externos. Estas chaves seriam usadas pelo backend.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="openai_api_key">OpenAI API Key</Label>
+                    <Input
+                      id="openai_api_key"
+                      type="password"
+                      placeholder="sk-..."
+                      value={apiKeys.openai}
+                      onChange={(e) => setApiKeys({ ...apiKeys, openai: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="anthropic_api_key">Anthropic API Key</Label>
+                    <Input
+                      id="anthropic_api_key"
+                      type="password"
+                      placeholder="sk-ant-api03-..."
+                      value={apiKeys.anthropic}
+                      onChange={(e) => setApiKeys({ ...apiKeys, anthropic: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="runway_api_key">Runway API Key</Label>
+                    <Input
+                      id="runway_api_key"
+                      type="password"
+                      placeholder="rw-..."
+                      value={apiKeys.runway}
+                      onChange={(e) => setApiKeys({ ...apiKeys, runway: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="midjourney_api_key">Midjourney API Key</Label>
+                    <Input
+                      id="midjourney_api_key"
+                      type="password"
+                      placeholder="mj-..."
+                      value={apiKeys.midjourney}
+                      onChange={(e) => setApiKeys({ ...apiKeys, midjourney: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="google_api_key">Google API Key</Label>
+                    <Input
+                      id="google_api_key"
+                      type="password"
+                      placeholder="AIza..."
+                      value={apiKeys.google}
+                      onChange={(e) => setApiKeys({ ...apiKeys, google: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="meta_api_key">Meta API Key</Label>
+                    <Input
+                      id="meta_api_key"
+                      type="password"
+                      placeholder="EAAB..."
+                      value={apiKeys.meta}
+                      onChange={(e) => setApiKeys({ ...apiKeys, meta: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="baidu_api_key">Baidu API Key</Label>
+                    <Input
+                      id="baidu_api_key"
+                      type="password"
+                      placeholder="24.a..."
+                      value={apiKeys.baidu}
+                      onChange={(e) => setApiKeys({ ...apiKeys, baidu: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="microsoft_api_key">Microsoft API Key</Label>
+                    <Input
+                      id="microsoft_api_key"
+                      type="password"
+                      placeholder="ms-..."
+                      value={apiKeys.microsoft}
+                      onChange={(e) => setApiKeys({ ...apiKeys, microsoft: e.target.value })}
+                    />
+                  </div>
+                  <Button onClick={handleSaveApiKeys} className="w-full">Salvar Chaves de API</Button>
                 </div>
               </TabsContent>
 
