@@ -295,29 +295,52 @@ export default function AIPage() {
     // No mundo real, você enviaria a URL para o backend aqui.
   };
 
+  // --- Funções de simulação de "backend" para treinamento e logs ---
+
+  const _simulateTrainModel = async (modelCfg: typeof defaultConfig.model, trainCfg: typeof defaultConfig.training, dataset: string, baseModel: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 3000)); // Simula um treinamento mais longo
+    const timestamp = new Date().toLocaleString();
+    const plotUrl = "https://via.placeholder.com/600x300?text=Training+Metrics+Plot"; // URL de imagem placeholder
+    return {
+      message: `Treinamento do modelo iniciado com sucesso em ${timestamp}. Dataset: ${dataset}, Modelo Base: ${baseModel}.`,
+      metricsPlotUrl: plotUrl,
+    };
+  };
+
+  const _simulateGetLogs = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simula busca de logs
+    const timestamp = new Date().toLocaleString();
+    return {
+      logs: `[${timestamp}] INFO: Sistema iniciado.\n` +
+            `[${timestamp}] DEBUG: Carregando configurações do modelo.\n` +
+            `[${timestamp}] INFO: Treinamento iniciado para o modelo X.\n` +
+            `[${timestamp}] WARNING: Baixa precisão na época 5.\n` +
+            `[${timestamp}] INFO: Treinamento concluído com sucesso.\n` +
+            `[${timestamp}] ERROR: Falha na conexão com o serviço de dados.\n` +
+            `[${timestamp}] INFO: Logs atualizados.`
+    };
+  };
+
+  const _simulateClearLogs = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 500)); // Simula limpeza de logs
+    const timestamp = new Date().toLocaleString();
+    return {
+      message: `Logs limpos em ${timestamp}.`
+    };
+  };
+
+  // --- Funções de manipulação que chamam as simulações ---
+
   const handleTrainModel = async () => {
     setIsLoading(true);
     toast.info("Iniciando treinamento do modelo...");
     try {
-      const response = await fetch('/api/train', { // Endpoint hipotético para iniciar o treinamento
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ modelConfig, trainingConfig, datasetUrl, fineTuneBase }), // Envia as configurações do modelo e treinamento
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      toast.success("Treinamento iniciado com sucesso!");
-      // O backend deve retornar a URL do gráfico de métricas, se houver
-      if (data.metricsPlotUrl) {
-        setMetricsPlotUrl(data.metricsPlotUrl);
-      } else {
-        setMetricsPlotUrl(null); // Limpa o gráfico anterior se não houver um novo
-      }
+      const result = await _simulateTrainModel(modelConfig, trainingConfig, datasetUrl, fineTuneBase);
+      toast.success(result.message);
+      setMetricsPlotUrl(result.metricsPlotUrl);
     } catch (error) {
-      console.error("Erro ao iniciar treinamento:", error);
-      toast.error("Erro ao iniciar treinamento. Verifique o backend.");
+      console.error("Erro ao iniciar treinamento simulado:", error);
+      toast.error("Erro ao iniciar treinamento simulado.");
       setMetricsPlotUrl(null);
     } finally {
       setIsLoading(false);
@@ -333,17 +356,13 @@ export default function AIPage() {
     setIsLoading(true);
     toast.info("Carregando logs...");
     try {
-      const response = await fetch('/api/logs'); // Endpoint hipotético para buscar logs
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setLogsContent(data.logs || "Nenhum log disponível.");
+      const result = await _simulateGetLogs();
+      setLogsContent(result.logs);
       toast.success("Logs carregados!");
     } catch (error) {
-      console.error("Erro ao carregar logs:", error);
-      setLogsContent("Erro ao carregar logs.");
-      toast.error("Erro ao carregar logs. Verifique o backend.");
+      console.error("Erro ao carregar logs simulados:", error);
+      setLogsContent("Erro ao carregar logs simulados.");
+      toast.error("Erro ao carregar logs simulados.");
     } finally {
       setIsLoading(false);
     }
@@ -353,15 +372,12 @@ export default function AIPage() {
     setIsLoading(true);
     toast.info("Limpando logs...");
     try {
-      const response = await fetch('/api/clear-logs', { method: 'POST' }); // Endpoint hipotético para limpar logs
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      setLogsContent(`Logs limpos em ${new Date().toLocaleString()}\n`);
+      const result = await _simulateClearLogs();
+      setLogsContent(result.message + "\n"); // Adiciona uma nova linha para clareza
       toast.success("Logs limpos!");
     } catch (error) {
-      console.error("Erro ao limpar logs:", error);
-      toast.error("Erro ao limpar logs. Verifique o backend.");
+      console.error("Erro ao limpar logs simulados:", error);
+      toast.error("Erro ao limpar logs simulados.");
     } finally {
       setIsLoading(false);
     }
