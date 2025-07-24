@@ -130,8 +130,9 @@ const defaultConfig = {
   }
 };
 
-// Lista de modelos base para o combobox
+// Lista de modelos base para o combobox (agora inclui "Nenhum")
 const BASE_MODELS_EXAMPLES = [
+  "Nenhum", // Adicionado para tornar a seleção opcional
   "GPT-3.5-turbo", "GPT-4", "Claude-3-Opus", "Llama-3-8B", "Mistral-7B",
   "Falcon-40B", "Bloom-7B1", "T5-Large", "BERT-Base", "RoBERTa-Large",
   "DistilBERT", "XLM-RoBERTa", "Electra-Base", "DeBERTa-v3-Large", "GPT-Neo-2.7B",
@@ -162,7 +163,7 @@ export default function AIPage() {
 
   // Novos estados para URL do Dataset e Modelo Base para Fine-tuning
   const [datasetUrl, setDatasetUrl] = useState("https://huggingface.co/datasets/oscar-corpus/OSCAR-2301/resolve/main/br_meta/br_meta.jsonl.zst");
-  const [fineTuneBase, setFineTuneBase] = useState("Nenhum");
+  const [fineTuneBase, setFineTuneBase] = useState("Nenhum"); // Inicializado com "Nenhum"
   const [openCombobox, setOpenCombobox] = useState(false); // Estado para o combobox
 
   // Estado para o input de URL de download
@@ -334,7 +335,12 @@ export default function AIPage() {
       const response = await fetch('/api/train', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ modelConfig, trainingConfig, datasetUrl, fineTuneBase }),
+        body: JSON.stringify({
+          modelConfig,
+          trainingConfig,
+          datasetUrl,
+          fineTuneBase: fineTuneBase === "Nenhum" ? null : fineTuneBase // Envia null se "Nenhum" for selecionado
+        }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -343,6 +349,8 @@ export default function AIPage() {
       const data = await response.json();
       toast.success(data.message);
       setMetricsPlotUrl(data.metricsPlotUrl || null);
+      // Se fineTuneBase for null, o backend deve ter a lógica para identificar automaticamente
+      // ou usar um modelo base padrão.
     } catch (error) {
       console.error("Erro ao iniciar treinamento:", error);
       toast.error(`Erro ao iniciar treinamento: ${(error as Error).message}.`);
@@ -824,7 +832,7 @@ export default function AIPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="fine_tune_base">Modelo Base para Fine-tuning</Label>
+                    <Label htmlFor="fine_tune_base">Modelo Base para Fine-tuning (Opcional)</Label>
                     <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
                       <PopoverTrigger asChild>
                         <Button
@@ -833,7 +841,7 @@ export default function AIPage() {
                           aria-expanded={openCombobox}
                           className="w-full justify-between"
                         >
-                          {fineTuneBase || "Selecione um modelo..."}
+                          {fineTuneBase || "Selecione um modelo (opcional)..."}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
