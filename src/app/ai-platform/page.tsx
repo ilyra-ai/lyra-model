@@ -18,22 +18,61 @@ import {
   Laptop, Sparkles, LogOut, Cloud, FilePlus2,
   Paperclip, Globe, ArrowUp, Image, PencilLine,
   FileText, TerminalSquare, Lightbulb, Upload, Download,
-  Video, ScrollText, Trash2, Key
+  Video, ScrollText, Trash2, Key, Eraser
 } from "lucide-react";
 
-// Placeholder para os modelos de IA (adaptado do script Python)
+// Lista completa de modelos de IA (copiada do script Python)
 const AI_MODELS = {
   "text": [
-    {"name": "GPT-2", "type": "text", "local": true},
-    {"name": "GPT-3.5", "type": "text", "api": "openai"},
-    {"name": "Claude", "type": "text", "api": "anthropic"},
+    {"name": "GPT-2", "type": "text", "api": null, "local": true},
+    {"name": "GPT-3.5", "type": "text", "api": "openai", "local": false},
+    {"name": "Claude", "type": "text", "api": "anthropic", "local": false},
+    {"name": "LLaMA", "type": "text", "api": null, "local": true},
+    {"name": "BLOOM", "type": "text", "api": null, "local": true},
   ],
   "image": [
-    {"name": "Stable Diffusion", "type": "image", "local": true},
-    {"name": "DALL-E 2", "type": "image", "api": "openai"},
+    {"name": "Stable Diffusion", "type": "image", "api": null, "local": true},
+    {"name": "DALL-E 2", "type": "image", "api": "openai", "local": false},
+    {"name": "Midjourney", "type": "image", "api": "midjourney", "local": false},
+    {"name": "Kandinsky", "type": "image", "api": null, "local": true},
+    {"name": "DeepFloyd IF", "type": "image", "api": null, "local": true},
+    {"name": "Imagen", "type": "image", "api": "google", "local": false},
+    {"name": "DreamBooth", "type": "image", "api": null, "local": true},
+    {"name": "ControlNet", "type": "image", "api": null, "local": true},
+    {"name": "GLIDE", "type": "image", "api": null, "local": true},
+    {"name": "Latent Diffusion", "type": "image", "api": null, "local": true},
+    {"name": "VQGAN+CLIP", "type": "image", "api": null, "local": true},
+    {"name": "BigGAN", "type": "image", "api": null, "local": true},
+    {"name": "StyleGAN3", "type": "image", "api": null, "local": true},
+    {"name": "Parti", "type": "image", "api": "google", "local": false},
+    {"name": "Make-A-Scene", "type": "image", "api": "meta", "local": false},
+    {"name": "CogView2", "type": "image", "api": null, "local": true},
+    {"name": "ERNIE-ViLG", "type": "image", "api": "baidu", "local": false},
+    {"name": "Taiyi", "type": "image", "api": null, "local": true},
+    {"name": "OFA", "type": "image", "api": null, "local": true},
+    {"name": "Versatile Diffusion", "type": "image", "api": null, "local": true},
   ],
   "video": [
-    {"name": "Runway Gen-2", "type": "video", "api": "runway"},
+    {"name": "Runway Gen-2", "type": "video", "api": "runway", "local": false},
+    {"name": "Pika Labs", "type": "video", "api": "pika", "local": false},
+    {"name": "Stable Video Diffusion", "type": "video", "api": null, "local": true},
+    {"name": "ModelScope", "type": "video", "api": null, "local": true},
+    {"name": "Zeroscope", "type": "video", "api": null, "local": true},
+    {"name": "Text2Video-Zero", "type": "video", "api": null, "local": true},
+    {"name": "Make-A-Video", "type": "video", "api": "meta", "local": false},
+    {"name": "Imagen Video", "type": "video", "api": "google", "local": false},
+    {"name": "Phenaki", "type": "video", "api": "google", "local": false},
+    {"name": "CogVideo", "type": "video", "api": null, "local": true},
+    {"name": "NUWA", "type": "video", "api": "microsoft", "local": false},
+    {"name": "VideoGPT", "type": "video", "api": null, "local": true},
+    {"name": "TATS", "type": "video", "api": null, "local": true},
+    {"name": "VideoGen", "type": "video", "api": null, "local": true},
+    {"name": "Tune-A-Video", "type": "video", "api": null, "local": true},
+    {"name": "Text2Live", "type": "video", "api": null, "local": true},
+    {"name": "DreamBooth3D", "type": "video", "api": null, "local": true},
+    {"name": "Magic Video", "type": "video", "api": null, "local": true},
+    {"name": "Latent-Shift", "type": "video", "api": null, "local": true},
+    {"name": "Video Diffusion", "type": "video", "api": null, "local": true},
   ]
 };
 
@@ -255,6 +294,11 @@ export default function AIPage() {
     toast.success("Chaves de API salvas (simulado)!");
   };
 
+  const handleClearChat = () => {
+    setChatHistory([]);
+    toast.info("Histórico do chat limpo!");
+  };
+
   return (
     <div className="flex h-screen w-full flex-col items-start bg-background text-foreground font-[family-name:var(--font-geist-sans)]">
       {/* Header */}
@@ -321,6 +365,9 @@ export default function AIPage() {
               <Sparkles className="h-4 w-4" /> Atualizar plano
             </DropdownMenuItem>
             <div className="w-full h-px bg-border my-2" />
+            <DropdownMenuItem className="flex items-center gap-2" onClick={handleClearChat}>
+              <Eraser className="h-4 w-4" /> Limpar Chat
+            </DropdownMenuItem>
             <DropdownMenuItem className="flex items-center gap-2">
               <LogOut className="h-4 w-4" /> Sair
             </DropdownMenuItem>
