@@ -10,12 +10,11 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { MainSidebar } from "@/components/main-sidebar";
-import { cn } from "@/lib/utils"; // Import cn for conditional classnames
+import { cn } from "@/lib/utils";
 
 import {
   Info, MessageCircle, UserCog2, Book, Settings,
@@ -23,10 +22,10 @@ import {
   Paperclip, Globe, ArrowUp, Image, PencilLine,
   FileText, TerminalSquare, Lightbulb, Upload, Download,
   Video, ScrollText, Trash2, Key, Eraser, Palette,
-  Check, ChevronsUpDown // Adicionado para o combobox
+  Check, ChevronsUpDown
 } from "lucide-react";
 
-import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"; // Adicionado para o combobox
+import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 
 // Interface para os modelos de IA
 interface Model {
@@ -166,6 +165,9 @@ export default function AIPage() {
   const [fineTuneBase, setFineTuneBase] = useState("Nenhum");
   const [openCombobox, setOpenCombobox] = useState(false); // Estado para o combobox
 
+  // Estado para o input de URL de download
+  const [downloadUrlInput, setDownloadUrlInput] = useState("");
+
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
@@ -255,7 +257,7 @@ export default function AIPage() {
         break;
       case "analyze":
         prompt = "o seguinte texto para análise de sentimento e entidades: 'O novo produto é excelente, mas o suporte ao cliente precisa melhorar.'";
-        toastMessage = "Analisando texto...";
+        toastMessage = "Análise de texto simulada.";
         simulatedResult = "📊 Análise de texto simulada. (Requer backend para funcionalidade real)";
         break;
       case "code":
@@ -298,17 +300,31 @@ export default function AIPage() {
     // No mundo real, você enviaria os arquivos para o backend aqui.
   };
 
-  const handleUrlDownload = async (url: string) => {
-    if (!url.trim()) {
-      toast.error("Por favor, insira uma URL.");
+  const handleUrlDownload = async () => {
+    if (!downloadUrlInput.trim()) {
+      toast.error("Por favor, insira uma URL para download.");
       return;
     }
     setIsLoading(true);
-    toast.info("Baixando da URL...");
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Simula atraso
-    toast.success(`Download simulado da URL ${url} concluído.`);
-    setIsLoading(false);
-    // No mundo real, você enviaria a URL para o backend aqui.
+    toast.info("Enviando URL para download no backend...");
+    try {
+      const response = await fetch('/api/download-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: downloadUrlInput }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      toast.success(data.message);
+    } catch (error) {
+      console.error("Erro ao enviar URL para download:", error);
+      toast.error(`Erro ao baixar da URL: ${(error as Error).message}.`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleTrainModel = async () => {
@@ -414,82 +430,68 @@ export default function AIPage() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-2">
-                <Tabs value={selectedModelType} onValueChange={(value) => {
-                  setSelectedModelType(value as Model['type']);
-                  setSelectedModel(AI_MODELS[value as Model['type']][0]); // Select first model of new type
-                }} className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="text">Texto</TabsTrigger>
-                    <TabsTrigger value="image">Imagem</TabsTrigger>
-                    <TabsTrigger value="video">Vídeo</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="text" className="p-0 border-none">
-                    <div className="flex flex-col items-start gap-1">
-                      <span className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground">Modelos de Texto</span>
-                      <div className="flex w-full flex-col items-start gap-1 px-2">
-                        {AI_MODELS.text.map((model) => (
-                          <Button
-                            key={model.name}
-                            variant="ghost"
-                            className={`w-full justify-start ${selectedModel.name === model.name && selectedModel.type === model.type ? "bg-accent text-accent-foreground" : ""}`}
-                            onClick={() => setSelectedModel(model)}
-                          >
-                            <div className="flex flex-col items-start">
-                              <span className="text-sm font-medium">{model.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {model.local ? "Local" : `API: ${model.api}`}
-                              </span>
-                            </div>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="image" className="p-0 border-none">
-                    <div className="flex flex-col items-start gap-1">
-                      <span className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground">Modelos de Imagem</span>
-                      <div className="flex w-full flex-col items-start gap-1 px-2">
-                        {AI_MODELS.image.map((model) => (
-                          <Button
-                            key={model.name}
-                            variant="ghost"
-                            className={`w-full justify-start ${selectedModel.name === model.name && selectedModel.type === model.type ? "bg-accent text-accent-foreground" : ""}`}
-                            onClick={() => setSelectedModel(model)}
-                          >
-                            <div className="flex flex-col items-start">
-                              <span className="text-sm font-medium">{model.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {model.local ? "Local" : `API: ${model.api}`}
-                              </span>
-                            </div>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="video" className="p-0 border-none">
-                    <div className="flex flex-col items-start gap-1">
-                      <span className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground">Modelos de Vídeo</span>
-                      <div className="flex w-full flex-col items-start gap-1 px-2">
-                        {AI_MODELS.video.map((model) => (
-                          <Button
-                            key={model.name}
-                            variant="ghost"
-                            className={`w-full justify-start ${selectedModel.name === model.name && selectedModel.type === model.type ? "bg-accent text-accent-foreground" : ""}`}
-                            onClick={() => setSelectedModel(model)}
-                          >
-                            <div className="flex flex-col items-start">
-                              <span className="text-sm font-medium">{model.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {model.local ? "Local" : `API: ${model.api}`}
-                              </span>
-                            </div>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                <div className="flex flex-col items-start gap-1">
+                  <span className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground">Modelos de Texto</span>
+                  <div className="flex w-full flex-col items-start gap-1 px-2">
+                    {AI_MODELS.text.map((model) => (
+                      <Button
+                        key={model.name}
+                        variant="ghost"
+                        className={`w-full justify-start ${selectedModel.name === model.name && selectedModel.type === model.type ? "bg-accent text-accent-foreground" : ""}`}
+                        onClick={() => setSelectedModel(model)}
+                      >
+                        <div className="flex flex-col items-start">
+                          <span className="text-sm font-medium">{model.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {model.local ? "Local" : `API: ${model.api}`}
+                          </span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="w-full h-px bg-border my-2" />
+                <div className="flex flex-col items-start gap-1">
+                  <span className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground">Modelos de Imagem</span>
+                  <div className="flex w-full flex-col items-start gap-1 px-2">
+                    {AI_MODELS.image.map((model) => (
+                      <Button
+                        key={model.name}
+                        variant="ghost"
+                        className={`w-full justify-start ${selectedModel.name === model.name && selectedModel.type === model.type ? "bg-accent text-accent-foreground" : ""}`}
+                        onClick={() => setSelectedModel(model)}
+                      >
+                        <div className="flex flex-col items-start">
+                          <span className="text-sm font-medium">{model.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {model.local ? "Local" : `API: ${model.api}`}
+                          </span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="w-full h-px bg-border my-2" />
+                <div className="flex flex-col items-start gap-1">
+                  <span className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground">Modelos de Vídeo</span>
+                  <div className="flex w-full flex-col items-start gap-1 px-2">
+                    {AI_MODELS.video.map((model) => (
+                      <Button
+                        key={model.name}
+                        variant="ghost"
+                        className={`w-full justify-start ${selectedModel.name === model.name && selectedModel.type === model.type ? "bg-accent text-accent-foreground" : ""}`}
+                        onClick={() => setSelectedModel(model)}
+                      >
+                        <div className="flex flex-col items-start">
+                          <span className="text-sm font-medium">{model.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {model.local ? "Local" : `API: ${model.api}`}
+                          </span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
                 <div className="w-full h-px bg-border my-2" />
                 <div className="flex w-full items-center gap-4 px-3 py-2">
                   <MessageCircle className="h-5 w-5 text-muted-foreground" />
@@ -535,7 +537,7 @@ export default function AIPage() {
           </div>
 
           {/* Main Content Area */}
-          {activeView === "chat" ? (
+          {activeView === "chat" && (
             <div className="flex w-full grow flex-col items-center justify-center gap-4 bg-background px-6 py-6 overflow-auto">
               <div className="flex w-full flex-col items-center justify-center gap-7">
                 <h1 className="text-3xl font-bold text-center text-foreground">
@@ -674,391 +676,398 @@ export default function AIPage() {
                 </div>
               </div>
             </div>
-          ) : (
+          )}
+
+          {activeView === "settings-model" && (
             <div className="flex w-full grow flex-col items-center justify-start gap-4 bg-background px-6 py-6 overflow-auto">
-              <div className="w-full max-w-3xl">
-                <Button variant="ghost" onClick={() => setActiveView("chat")} className="mb-4">
-                  ← Voltar ao Chat
-                </Button>
-                <Tabs value={activeView.replace('settings-', '')} onValueChange={(value) => setActiveView(`settings-${value}`)} className="w-full">
-                  <TabsList className="grid w-full grid-cols-6">
-                    <TabsTrigger value="model">⚙️ Configurações do Modelo</TabsTrigger>
-                    <TabsTrigger value="upload">📁 Upload de Dados</TabsTrigger>
-                    <TabsTrigger value="training">🧠 Treinamento</TabsTrigger>
-                    <TabsTrigger value="logs">📜 Logs</TabsTrigger>
-                    <TabsTrigger value="api-keys">🔑 Chaves de API</TabsTrigger>
-                    <TabsTrigger value="customize">🎨 Customizar UI</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="model" className="p-4 border rounded-md mt-4 bg-card">
-                    <h2 className="text-xl font-semibold mb-4">Configurações do Modelo</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h3 className="text-lg font-medium mb-2">Arquitetura do Modelo</h3>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="n_layers">Camadas ({modelConfig.n_layers})</Label>
-                            <Slider
-                              id="n_layers"
-                              min={1}
-                              max={24}
-                              step={1}
-                              value={[modelConfig.n_layers]}
-                              onValueChange={(val) => setModelConfig({ ...modelConfig, n_layers: val[0] })}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="n_heads">Heads de Atenção ({modelConfig.n_heads})</Label>
-                            <Slider
-                              id="n_heads"
-                              min={1}
-                              max={16}
-                              step={1}
-                              value={[modelConfig.n_heads]}
-                              onValueChange={(val) => setModelConfig({ ...modelConfig, n_heads: val[0] })}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="d_model">Dimensão do Modelo ({modelConfig.d_model})</Label>
-                            <Slider
-                              id="d_model"
-                              min={128}
-                              max={1024}
-                              step={64}
-                              value={[modelConfig.d_model]}
-                              onValueChange={(val) => setModelConfig({ ...modelConfig, d_model: val[0] })}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="max_seq_len">Comprimento Máximo da Sequência ({modelConfig.max_seq_len})</Label>
-                            <Slider
-                              id="max_seq_len"
-                              min={128}
-                              max={2048}
-                              step={128}
-                              value={[modelConfig.max_seq_len]}
-                              onValueChange={(val) => setModelConfig({ ...modelConfig, max_seq_len: val[0] })}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-medium mb-2">Parâmetros de Treinamento</h3>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="batch_size">Tamanho do Batch ({trainingConfig.batch_size})</Label>
-                            <Slider
-                              id="batch_size"
-                              min={1}
-                              max={64}
-                              step={1}
-                              value={[trainingConfig.batch_size]}
-                              onValueChange={(val) => setTrainingConfig({ ...trainingConfig, batch_size: val[0] })}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="epochs">Épocas ({trainingConfig.epochs})</Label>
-                            <Slider
-                              id="epochs"
-                              min={1}
-                              max={100}
-                              step={1}
-                              value={[trainingConfig.epochs]}
-                              onValueChange={(val) => setTrainingConfig({ ...trainingConfig, epochs: val[0] })}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="learning_rate">Taxa de Aprendizagem</Label>
-                            <Input
-                              id="learning_rate"
-                              type="number"
-                              step="0.00001"
-                              value={trainingConfig.learning_rate}
-                              onChange={(e) => setTrainingConfig({ ...trainingConfig, learning_rate: parseFloat(e.target.value) })}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <Button onClick={handleSaveConfig} className="mt-6 w-full">Salvar Configuração</Button>
-                  </TabsContent>
-
-                  <TabsContent value="upload" className="p-4 border rounded-md mt-4 bg-card">
-                    <h2 className="text-xl font-semibold mb-4">Upload de Dados</h2>
+              <div className="w-full max-w-3xl p-4 border rounded-md bg-card">
+                <h2 className="text-xl font-semibold mb-4">Configurações do Modelo</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Arquitetura do Modelo</h3>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="file_upload">Upload de Arquivos</Label>
-                        <Input
-                          id="file_upload"
-                          type="file"
-                          multiple
-                          accept=".txt,.pdf,.docx,.json,.jsonl,.zst,.csv"
-                          onChange={(e) => handleFileUpload(e.target.files)}
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-grow">
-                          <Label htmlFor="url_input">Ou baixar de URL</Label>
-                          <Input
-                            id="url_input"
-                            placeholder="https://example.com/data.jsonl.zst"
-                            onBlur={(e) => handleUrlDownload(e.target.value)}
-                          />
-                        </div>
-                        <Button onClick={() => handleUrlDownload((document.getElementById('url_input') as HTMLInputElement).value)} className="mt-6">
-                          Baixar
-                        </Button>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="training" className="p-4 border rounded-md mt-4 bg-card">
-                    <h2 className="text-xl font-semibold mb-4">Treinamento</h2>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="dataset_url">URL do Dataset</Label>
-                        <Input
-                          id="dataset_url"
-                          placeholder="https://huggingface.co/datasets/oscar-corpus/OSCAR-2301/resolve/main/br_meta/br_meta.jsonl.zst"
-                          value={datasetUrl}
-                          onChange={(e) => setDatasetUrl(e.target.value)}
+                        <Label htmlFor="n_layers">Camadas ({modelConfig.n_layers})</Label>
+                        <Slider
+                          id="n_layers"
+                          min={1}
+                          max={24}
+                          step={1}
+                          value={[modelConfig.n_layers]}
+                          onValueChange={(val) => setModelConfig({ ...modelConfig, n_layers: val[0] })}
                         />
                       </div>
                       <div>
-                        <Label htmlFor="fine_tune_base">Modelo Base para Fine-tuning</Label>
-                        <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={openCombobox}
-                              className="w-full justify-between"
-                            >
-                              {fineTuneBase || "Selecione um modelo..."}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                            <Command>
-                              <CommandInput
-                                placeholder="Buscar ou digitar modelo..."
-                                value={fineTuneBase}
-                                onValueChange={setFineTuneBase}
-                              />
-                              <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
-                              <CommandGroup>
-                                <CommandList>
-                                  {BASE_MODELS_EXAMPLES.map((model) => (
-                                    <CommandItem
-                                      key={model}
-                                      value={model}
-                                      onSelect={(currentValue) => {
-                                        setFineTuneBase(currentValue);
-                                        setOpenCombobox(false);
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          fineTuneBase.toLowerCase() === model.toLowerCase() ? "opacity-100" : "opacity-0"
-                                        )}
-                                      />
-                                      {model}
-                                    </CommandItem>
-                                  ))}
-                                </CommandList>
-                              </CommandGroup>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                        <Label htmlFor="n_heads">Heads de Atenção ({modelConfig.n_heads})</Label>
+                        <Slider
+                          id="n_heads"
+                          min={1}
+                          max={16}
+                          step={1}
+                          value={[modelConfig.n_heads]}
+                          onValueChange={(val) => setModelConfig({ ...modelConfig, n_heads: val[0] })}
+                        />
                       </div>
-                      <Button onClick={handleTrainModel} className="w-full" disabled={isLoading}>
-                        <Sparkles className="h-4 w-4 mr-2" /> Iniciar Treinamento
-                      </Button>
-                      {metricsPlotUrl && (
-                        <div className="mt-6">
-                          <h3 className="text-lg font-medium mb-2">Métricas de Treinamento</h3>
-                          <img src={metricsPlotUrl} alt="Training Metrics Plot" className="w-full h-auto rounded-md border" />
-                          <p className="text-sm text-muted-foreground mt-2">
-                            Este gráfico é um placeholder. O gráfico real seria gerado pelo backend Python.
-                          </p>
-                        </div>
-                      )}
+                      <div>
+                        <Label htmlFor="d_model">Dimensão do Modelo ({modelConfig.d_model})</Label>
+                        <Slider
+                          id="d_model"
+                          min={128}
+                          max={1024}
+                          step={64}
+                          value={[modelConfig.d_model]}
+                          onValueChange={(val) => setModelConfig({ ...modelConfig, d_model: val[0] })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="max_seq_len">Comprimento Máximo da Sequência ({modelConfig.max_seq_len})</Label>
+                        <Slider
+                          id="max_seq_len"
+                          min={128}
+                          max={2048}
+                          step={128}
+                          value={[modelConfig.max_seq_len]}
+                          onValueChange={(val) => setModelConfig({ ...modelConfig, max_seq_len: val[0] })}
+                        />
+                      </div>
                     </div>
-                  </TabsContent>
-
-                  <TabsContent value="logs" className="p-4 border rounded-md mt-4 bg-card">
-                    <h2 className="text-xl font-semibold mb-4">Logs do Sistema</h2>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Parâmetros de Treinamento</h3>
                     <div className="space-y-4">
-                      <Textarea
-                        id="logs_content"
-                        value={logsContent}
-                        readOnly
-                        rows={15}
-                        className="font-mono text-xs bg-muted/50 resize-y"
+                      <div>
+                        <Label htmlFor="batch_size">Tamanho do Batch ({trainingConfig.batch_size})</Label>
+                        <Slider
+                          id="batch_size"
+                          min={1}
+                          max={64}
+                          step={1}
+                          value={[trainingConfig.batch_size]}
+                          onValueChange={(val) => setTrainingConfig({ ...trainingConfig, batch_size: val[0] })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="epochs">Épocas ({trainingConfig.epochs})</Label>
+                        <Slider
+                          id="epochs"
+                          min={1}
+                          max={100}
+                          step={1}
+                          value={[trainingConfig.epochs]}
+                          onValueChange={(val) => setTrainingConfig({ ...trainingConfig, epochs: val[0] })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="learning_rate">Taxa de Aprendizagem</Label>
+                        <Input
+                          id="learning_rate"
+                          type="number"
+                          step="0.00001"
+                          value={trainingConfig.learning_rate}
+                          onChange={(e) => setTrainingConfig({ ...trainingConfig, learning_rate: parseFloat(e.target.value) })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <Button onClick={handleSaveConfig} className="mt-6 w-full">Salvar Configuração</Button>
+              </div>
+            </div>
+          )}
+
+          {activeView === "settings-upload" && (
+            <div className="flex w-full grow flex-col items-center justify-start gap-4 bg-background px-6 py-6 overflow-auto">
+              <div className="w-full max-w-3xl p-4 border rounded-md bg-card">
+                <h2 className="text-xl font-semibold mb-4">Upload de Dados</h2>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="file_upload">Upload de Arquivos</Label>
+                    <Input
+                      id="file_upload"
+                      type="file"
+                      multiple
+                      accept=".txt,.pdf,.docx,.json,.jsonl,.zst,.csv"
+                      onChange={(e) => handleFileUpload(e.target.files)}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-grow">
+                      <Label htmlFor="url_input">Ou baixar de URL</Label>
+                      <Input
+                        id="url_input"
+                        placeholder="https://example.com/data.jsonl.zst"
+                        value={downloadUrlInput}
+                        onChange={(e) => setDownloadUrlInput(e.target.value)}
                       />
-                      <div className="flex gap-2">
-                        <Button onClick={handleGetLogs} disabled={isLoading} className="flex-grow">
-                          Carregar Logs
-                        </Button>
-                        <Button onClick={handleClearLogs} disabled={isLoading} variant="destructive" className="flex-grow">
-                          Limpar Logs
-                        </Button>
-                      </div>
                     </div>
-                  </TabsContent>
+                    <Button onClick={handleUrlDownload} className="mt-6" disabled={isLoading}>
+                      Baixar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
-                  {/* API Keys Tab */}
-                  <TabsContent value="api-keys" className="p-4 border rounded-md mt-4 bg-card">
-                    <h2 className="text-xl font-semibold mb-4">Chaves de API</h2>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Insira suas chaves de API para provedores de IA externos. Estas chaves seriam usadas pelo backend.
-                    </p>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="openai_api_key">OpenAI API Key</Label>
-                        <Input
-                          id="openai_api_key"
-                          type="password"
-                          placeholder="sk-..."
-                          value={apiKeys.openai}
-                          onChange={(e) => setApiKeys({ ...apiKeys, openai: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="anthropic_api_key">Anthropic API Key</Label>
-                        <Input
-                          id="anthropic_api_key"
-                          type="password"
-                          placeholder="sk-ant-api03-..."
-                          value={apiKeys.anthropic}
-                          onChange={(e) => setApiKeys({ ...apiKeys, anthropic: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="runway_api_key">Runway API Key</Label>
-                        <Input
-                          id="runway_api_key"
-                          type="password"
-                          placeholder="rw-..."
-                          value={apiKeys.runway}
-                          onChange={(e) => setApiKeys({ ...apiKeys, runway: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="midjourney_api_key">Midjourney API Key</Label>
-                        <Input
-                          id="midjourney_api_key"
-                          type="password"
-                          placeholder="mj-..."
-                          value={apiKeys.midjourney}
-                          onChange={(e) => setApiKeys({ ...apiKeys, midjourney: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="google_api_key">Google API Key</Label>
-                        <Input
-                          id="google_api_key"
-                          type="password"
-                          placeholder="AIza..."
-                          value={apiKeys.google}
-                          onChange={(e) => setApiKeys({ ...apiKeys, google: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="meta_api_key">Meta API Key</Label>
-                        <Input
-                          id="meta_api_key"
-                          type="password"
-                          placeholder="EAAB..."
-                          value={apiKeys.meta}
-                          onChange={(e) => setApiKeys({ ...apiKeys, meta: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="baidu_api_key">Baidu API Key</Label>
-                        <Input
-                          id="baidu_api_key"
-                          type="password"
-                          placeholder="24.a..."
-                          value={apiKeys.baidu}
-                          onChange={(e) => setApiKeys({ ...apiKeys, baidu: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="microsoft_api_key">Microsoft API Key</Label>
-                        <Input
-                          id="microsoft_api_key"
-                          type="password"
-                          placeholder="ms-..."
-                          value={apiKeys.microsoft}
-                          onChange={(e) => setApiKeys({ ...apiKeys, microsoft: e.target.value })}
-                        />
-                      </div>
-                      <Button onClick={handleSaveApiKeys} className="w-full">Salvar Chaves de API</Button>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="customize" className="p-4 border rounded-md mt-4 bg-card">
-                    <h2 className="text-xl font-semibold mb-4">Customizar UI</h2>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="ui_theme">Tema</Label>
-                        <RadioGroup
-                          id="ui_theme"
-                          value={uiConfig.theme}
-                          onValueChange={(val) => setUiConfig({ ...uiConfig, theme: val })}
-                          className="flex gap-4"
+          {activeView === "settings-training" && (
+            <div className="flex w-full grow flex-col items-center justify-start gap-4 bg-background px-6 py-6 overflow-auto">
+              <div className="w-full max-w-3xl p-4 border rounded-md bg-card">
+                <h2 className="text-xl font-semibold mb-4">Treinamento</h2>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="dataset_url">URL do Dataset</Label>
+                    <Input
+                      id="dataset_url"
+                      placeholder="https://huggingface.co/datasets/oscar-corpus/OSCAR-2301/resolve/main/br_meta/br_meta.jsonl.zst"
+                      value={datasetUrl}
+                      onChange={(e) => setDatasetUrl(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="fine_tune_base">Modelo Base para Fine-tuning</Label>
+                    <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openCombobox}
+                          className="w-full justify-between"
                         >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="light" id="light" />
-                            <Label htmlFor="light">Claro</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="dark" id="dark" />
-                            <Label htmlFor="dark">Escuro</Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-                      <div>
-                        <Label htmlFor="primary_color">Cor Primária</Label>
-                        <Input
-                          id="primary_color"
-                          type="color"
-                          value={uiConfig.primary_color}
-                          onChange={(e) => setUiConfig({ ...uiConfig, primary_color: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="secondary_color">Cor Secundária</Label>
-                        <Input
-                          id="secondary_color"
-                          type="color"
-                          value={uiConfig.secondary_color}
-                          onChange={(e) => setUiConfig({ ...uiConfig, secondary_color: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="font_family">Família da Fonte</Label>
-                        <Input
-                          id="font_family"
-                          value={uiConfig.font_family}
-                          onChange={(e) => setUiConfig({ ...uiConfig, font_family: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="custom_css">CSS Personalizado</Label>
-                        <Textarea
-                          id="custom_css"
-                          value={uiConfig.custom_css}
-                          onChange={(e) => setUiConfig({ ...uiConfig, custom_css: e.target.value })}
-                          rows={8}
-                          className="font-mono"
-                        />
-                      </div>
-                      <Button onClick={handleSaveConfig} className="w-full">Salvar Configurações de UI</Button>
+                          {fineTuneBase || "Selecione um modelo..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Buscar ou digitar modelo..."
+                            value={fineTuneBase}
+                            onValueChange={setFineTuneBase}
+                          />
+                          <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandList>
+                              {BASE_MODELS_EXAMPLES.map((model) => (
+                                <CommandItem
+                                  key={model}
+                                  value={model}
+                                  onSelect={(currentValue) => {
+                                    setFineTuneBase(currentValue);
+                                    setOpenCombobox(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      fineTuneBase.toLowerCase() === model.toLowerCase() ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {model}
+                                </CommandItem>
+                              ))}
+                            </CommandList>
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <Button onClick={handleTrainModel} className="w-full" disabled={isLoading}>
+                    <Sparkles className="h-4 w-4 mr-2" /> Iniciar Treinamento
+                  </Button>
+                  {metricsPlotUrl && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-medium mb-2">Métricas de Treinamento</h3>
+                      <img src={metricsPlotUrl} alt="Training Metrics Plot" className="w-full h-auto rounded-md border" />
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Este gráfico é um placeholder. O gráfico real seria gerado pelo backend Python.
+                      </p>
                     </div>
-                  </TabsContent>
-                </Tabs>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeView === "settings-logs" && (
+            <div className="flex w-full grow flex-col items-center justify-start gap-4 bg-background px-6 py-6 overflow-auto">
+              <div className="w-full max-w-3xl p-4 border rounded-md bg-card">
+                <h2 className="text-xl font-semibold mb-4">Logs do Sistema</h2>
+                <div className="space-y-4">
+                  <Textarea
+                    id="logs_content"
+                    value={logsContent}
+                    readOnly
+                    rows={15}
+                    className="font-mono text-xs bg-muted/50 resize-y"
+                  />
+                  <div className="flex gap-2">
+                    <Button onClick={handleGetLogs} disabled={isLoading} className="flex-grow">
+                      Carregar Logs
+                    </Button>
+                    <Button onClick={handleClearLogs} disabled={isLoading} variant="destructive" className="flex-grow">
+                      Limpar Logs
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeView === "settings-api-keys" && (
+            <div className="flex w-full grow flex-col items-center justify-start gap-4 bg-background px-6 py-6 overflow-auto">
+              <div className="w-full max-w-3xl p-4 border rounded-md bg-card">
+                <h2 className="text-xl font-semibold mb-4">Chaves de API</h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Insira suas chaves de API para provedores de IA externos. Estas chaves seriam usadas pelo backend.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="openai_api_key">OpenAI API Key</Label>
+                    <Input
+                      id="openai_api_key"
+                      type="password"
+                      placeholder="sk-..."
+                      value={apiKeys.openai}
+                      onChange={(e) => setApiKeys({ ...apiKeys, openai: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="anthropic_api_key">Anthropic API Key</Label>
+                    <Input
+                      id="anthropic_api_key"
+                      type="password"
+                      placeholder="sk-ant-api03-..."
+                      value={apiKeys.anthropic}
+                      onChange={(e) => setApiKeys({ ...apiKeys, anthropic: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="runway_api_key">Runway API Key</Label>
+                    <Input
+                      id="runway_api_key"
+                      type="password"
+                      placeholder="rw-..."
+                      value={apiKeys.runway}
+                      onChange={(e) => setApiKeys({ ...apiKeys, runway: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="midjourney_api_key">Midjourney API Key</Label>
+                    <Input
+                      id="midjourney_api_key"
+                      type="password"
+                      placeholder="mj-..."
+                      value={apiKeys.midjourney}
+                      onChange={(e) => setApiKeys({ ...apiKeys, midjourney: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="google_api_key">Google API Key</Label>
+                    <Input
+                      id="google_api_key"
+                      type="password"
+                      placeholder="AIza..."
+                      value={apiKeys.google}
+                      onChange={(e) => setApiKeys({ ...apiKeys, google: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="meta_api_key">Meta API Key</Label>
+                    <Input
+                      id="meta_api_key"
+                      type="password"
+                      placeholder="EAAB..."
+                      value={apiKeys.meta}
+                      onChange={(e) => setApiKeys({ ...apiKeys, meta: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="baidu_api_key">Baidu API Key</Label>
+                    <Input
+                      id="baidu_api_key"
+                      type="password"
+                      placeholder="24.a..."
+                      value={apiKeys.baidu}
+                      onChange={(e) => setApiKeys({ ...apiKeys, baidu: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="microsoft_api_key">Microsoft API Key</Label>
+                    <Input
+                      id="microsoft_api_key"
+                      type="password"
+                      placeholder="ms-..."
+                      value={apiKeys.microsoft}
+                      onChange={(e) => setApiKeys({ ...apiKeys, microsoft: e.target.value })}
+                    />
+                  </div>
+                  <Button onClick={handleSaveApiKeys} className="w-full">Salvar Chaves de API</Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeView === "settings-customize" && (
+            <div className="flex w-full grow flex-col items-center justify-start gap-4 bg-background px-6 py-6 overflow-auto">
+              <div className="w-full max-w-3xl p-4 border rounded-md bg-card">
+                <h2 className="text-xl font-semibold mb-4">Customizar UI</h2>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="ui_theme">Tema</Label>
+                    <RadioGroup
+                      id="ui_theme"
+                      value={uiConfig.theme}
+                      onValueChange={(val) => setUiConfig({ ...uiConfig, theme: val })}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="light" id="light" />
+                        <Label htmlFor="light">Claro</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="dark" id="dark" />
+                        <Label htmlFor="dark">Escuro</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <div>
+                    <Label htmlFor="primary_color">Cor Primária</Label>
+                    <Input
+                      id="primary_color"
+                      type="color"
+                      value={uiConfig.primary_color}
+                      onChange={(e) => setUiConfig({ ...uiConfig, primary_color: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="secondary_color">Cor Secundária</Label>
+                    <Input
+                      id="secondary_color"
+                      type="color"
+                      value={uiConfig.secondary_color}
+                      onChange={(e) => setUiConfig({ ...uiConfig, secondary_color: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="font_family">Família da Fonte</Label>
+                    <Input
+                      id="font_family"
+                      value={uiConfig.font_family}
+                      onChange={(e) => setUiConfig({ ...uiConfig, font_family: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="custom_css">CSS Personalizado</Label>
+                    <Textarea
+                      id="custom_css"
+                      value={uiConfig.custom_css}
+                      onChange={(e) => setUiConfig({ ...uiConfig, custom_css: e.target.value })}
+                      rows={8}
+                      className="font-mono"
+                    />
+                  </div>
+                  <Button onClick={handleSaveConfig} className="w-full">Salvar Configurações de UI</Button>
+                </div>
               </div>
             </div>
           )}
