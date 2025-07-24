@@ -19,7 +19,9 @@ import { MainSidebar } from "@/components/main-sidebar"; // Import the new sideb
 import {
   Info, MessageCircle, UserCog2, Book, Settings,
   Laptop, Sparkles, LogOut, Cloud, FilePlus2,
-  Paperclip, Globe, ArrowUp, Eraser
+  Paperclip, Globe, ArrowUp, Image, PencilLine,
+  FileText, TerminalSquare, Lightbulb, Upload, Download,
+  Video, ScrollText, Trash2, Key, Eraser, Palette
 } from "lucide-react";
 
 // Interface para os modelos de IA
@@ -564,7 +566,7 @@ export default function AIPage() {
                   ← Voltar ao Chat
                 </Button>
                 <Tabs value={activeView.replace('settings-', '')} onValueChange={(value) => setActiveView(`settings-${value}`)} className="w-full">
-                  <TabsList className="grid w-full grid-cols-5">
+                  <TabsList className="grid w-full grid-cols-6"> {/* Adjusted grid-cols to 6 */}
                     <TabsTrigger value="model">⚙️ Configurações do Modelo</TabsTrigger>
                     <TabsTrigger value="upload">📁 Upload de Dados</TabsTrigger>
                     <TabsTrigger value="training">🧠 Treinamento</TabsTrigger>
