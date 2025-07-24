@@ -183,22 +183,32 @@ export default function AIPage() {
     setIsLoading(false);
   };
 
-  const handleQuickAction = async (actionType: Model['type']) => {
+  const handleQuickAction = async (actionIdentifier: string) => {
     let prompt = "";
     let toastMessage = "";
     let simulatedResult = "";
+    let modelType: Model['type'] = 'text'; // Default to text
+
+    // Determine modelType based on actionIdentifier
+    if (actionIdentifier === "image") {
+        modelType = "image";
+    } else if (actionIdentifier === "video") {
+        modelType = "video";
+    } else {
+        modelType = "text"; // All other quick actions are text-based
+    }
 
     // Automatically select a model of the chosen type for quick actions
-    const modelsOfType = AI_MODELS[actionType];
+    const modelsOfType = AI_MODELS[modelType];
     if (modelsOfType.length > 0) {
       setSelectedModel(modelsOfType[0]); // Select the first model of that type
-      setSelectedModelType(actionType);
+      setSelectedModelType(modelType);
     } else {
-      toast.error(`Nenhum modelo do tipo ${actionType} disponível.`);
+      toast.error(`Nenhum modelo do tipo ${modelType} disponível.`);
       return;
     }
 
-    switch (actionType) {
+    switch (actionIdentifier) {
       case "image":
         prompt = "uma paisagem bonita";
         toastMessage = "Gerando imagem...";
@@ -209,39 +219,30 @@ export default function AIPage() {
         toastMessage = "Gerando vídeo...";
         simulatedResult = "🎬 Vídeo simulado gerado. (Requer backend para funcionalidade real)";
         break;
-      case "text": // For 'write', 'summarize', 'analyze', 'code', 'brainstorm'
-        // This case handles all text-based quick actions
-        if (actionType === "text") { // This check is redundant but for clarity
-          switch (arguments[0]) { // Access the original actionType passed to handleQuickAction
-            case "write":
-              prompt = "um parágrafo sobre o futuro da IA";
-              toastMessage = "Ajudando a escrever...";
-              simulatedResult = "✏️ Texto simulado gerado. (Requer backend para funcionalidade real)";
-              break;
-            case "summarize":
-              prompt = "o seguinte texto: 'Inteligência Artificial (IA) é um campo da ciência da computação dedicado à resolução de problemas cognitivos comumente associados à inteligência humana, como aprendizado, resolução de problemas e reconhecimento de padrões.'";
-              toastMessage = "Resumindo texto...";
-              simulatedResult = "📄 Resumo simulado gerado. (Requer backend para funcionalidade real)";
-              break;
-            case "analyze":
-              prompt = "o seguinte texto para análise de sentimento e entidades: 'O novo produto é excelente, mas o suporte ao cliente precisa melhorar.'";
-              toastMessage = "Analisando texto...";
-              simulatedResult = "📊 Análise de texto simulada. (Requer backend para funcionalidade real)";
-              break;
-            case "code":
-              prompt = "uma função JavaScript para calcular o fatorial de um número.";
-              toastMessage = "Gerando código...";
-              simulatedResult = "💻 Código simulado gerado. (Requer backend para funcionalidade real)";
-              break;
-            case "brainstorm":
-              prompt = "ideias para um novo aplicativo de produtividade.";
-              toastMessage = "Brainstorming...";
-              simulatedResult = "💡 Ideias simuladas gerado. (Requer backend para funcionalidade real)";
-              break;
-            default:
-              return;
-          }
-        }
+      case "write":
+        prompt = "um parágrafo sobre o futuro da IA";
+        toastMessage = "Ajudando a escrever...";
+        simulatedResult = "✏️ Texto simulado gerado. (Requer backend para funcionalidade real)";
+        break;
+      case "summarize":
+        prompt = "o seguinte texto: 'Inteligência Artificial (IA) é um campo da ciência da computação dedicado à resolução de problemas cognitivos comumente associados à inteligência humana, como aprendizado, resolução de problemas e reconhecimento de padrões.'";
+        toastMessage = "Resumindo texto...";
+        simulatedResult = "📄 Resumo simulado gerado. (Requer backend para funcionalidade real)";
+        break;
+      case "analyze":
+        prompt = "o seguinte texto para análise de sentimento e entidades: 'O novo produto é excelente, mas o suporte ao cliente precisa melhorar.'";
+        toastMessage = "Analisando texto...";
+        simulatedResult = "📊 Análise de texto simulada. (Requer backend para funcionalidade real)";
+        break;
+      case "code":
+        prompt = "uma função JavaScript para calcular o fatorial de um número.";
+        toastMessage = "Gerando código...";
+        simulatedResult = "💻 Código simulado gerado. (Requer backend para funcionalidade real)";
+        break;
+      case "brainstorm":
+        prompt = "ideias para um novo aplicativo de produtividade.";
+        toastMessage = "Brainstorming...";
+        simulatedResult = "💡 Ideias simuladas gerado. (Requer backend para funcionalidade real)";
         break;
       default:
         return;
@@ -253,7 +254,7 @@ export default function AIPage() {
 
     setChatHistory((prev) => [
       ...prev,
-      { role: "user", content: `Ação rápida: ${arguments[0]} com prompt "${prompt}"` },
+      { role: "user", content: `Ação rápida: ${actionIdentifier} com prompt "${prompt}"` },
       { role: "assistant", content: simulatedResult },
     ]);
     toast.success("Ação concluída!");
@@ -549,19 +550,19 @@ export default function AIPage() {
               <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("video")}>
                 <Video className="h-4 w-4 text-purple-600" /> Gerar vídeo
               </Button>
-              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("text")}>
+              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("write")}>
                 <PencilLine className="h-4 w-4 text-blue-600" /> Ajudar a escrever
               </Button>
-              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("text")}>
+              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("summarize")}>
                 <FileText className="h-4 w-4 text-yellow-600" /> Resumir texto
               </Button>
-              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("text")}>
+              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("analyze")}>
                 <ScrollText className="h-4 w-4 text-orange-600" /> Analisar texto
               </Button>
-              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("text")}>
+              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("code")}>
                 <TerminalSquare className="h-4 w-4 text-gray-600" /> Código
               </Button>
-              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("text")}>
+              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("brainstorm")}>
                 <Lightbulb className="h-4 w-4 text-red-600" /> Brainstorm
               </Button>
             </div>
