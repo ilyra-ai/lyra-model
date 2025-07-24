@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import fs from 'fs/promises'
+import path from 'path'
 
 export async function POST(request: Request) {
   try {
@@ -8,15 +10,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'URL é obrigatória para download.' }, { status: 400 });
     }
 
-    // No ambiente de produção real, você enviaria esta URL para o seu backend de ML
-    // para que ele faça o download dos dados.
-    // Por exemplo, você pode usar uma biblioteca HTTP para fazer uma requisição POST
-    // para o seu servidor de ML com a URL fornecida.
-
-    console.log(`Simulando envio de URL para download no backend: ${url}`);
-
-    // Simulação de sucesso. No mundo real, você esperaria uma resposta do seu backend de ML.
-    return NextResponse.json({ message: `Solicitação de download para ${url} enviada com sucesso para o backend.` });
+  const res = await fetch(url)
+  if (!res.ok) {
+    throw new Error(`Falha no download: ${res.status}`)
+  }
+  const buffer = Buffer.from(await res.arrayBuffer())
+  const fileName = path.basename(new URL(url).pathname)
+  const dir = path.join(process.cwd(), 'public', 'downloads')
+  await fs.mkdir(dir, { recursive: true })
+  await fs.writeFile(path.join(dir, fileName), buffer)
+  return NextResponse.json({ message: `Arquivo salvo em ${fileName}` })
 
   } catch (error) {
     console.error('Erro ao processar solicitação de download:', error);
