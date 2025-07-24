@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { ResizablePanel, ResizablePanelGroup, type PanelGroupRef } from "@/components/ui/resizable"; // Importação corrigida
+import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import type { PanelGroupRef } from "react-resizable-panels"; // Importado diretamente de react-resizable-panels
 import { MainSidebar } from "@/components/main-sidebar";
 import { cn } from "@/lib/utils";
 
@@ -154,7 +155,7 @@ export default function AIPage() {
   const [metricsPlotUrl, setMetricsPlotUrl] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Novo estado para a barra lateral
 
-  const panelGroupRef = useRef<PanelGroupRef>(null); // Ref para o ResizablePanelGroup
+  const panelGroupRef = useRef<PanelGroupRef>(null); // Tipo da ref corrigido
 
 
   // Configurações do modelo (para a aba de configurações)
