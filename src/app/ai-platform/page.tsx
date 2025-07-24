@@ -21,8 +21,20 @@ import {
   Video, ScrollText, Trash2, Key, Eraser
 } from "lucide-react";
 
+// Interface para os modelos de IA
+interface Model {
+  name: string;
+  type: "text" | "image" | "video";
+  api: string | null;
+  local: boolean;
+}
+
 // Lista completa de modelos de IA (copiada do script Python)
-const AI_MODELS = {
+const AI_MODELS: {
+  text: Model[];
+  image: Model[];
+  video: Model[];
+} = {
   "text": [
     {"name": "GPT-2", "type": "text", "api": null, "local": true},
     {"name": "GPT-3.5", "type": "text", "api": "openai", "local": false},
@@ -98,7 +110,7 @@ const defaultConfig = {
     theme: "dark", primary_color: "#000000", secondary_color: "#FFFFFF",
     font_family: "Inter", custom_css: ""
   },
-  selected_model: "GPT-2",
+  selected_model_name: "GPT-2", // This will be replaced by selectedModel object
   installed_models: [],
   api_keys: {
     openai: "",
@@ -115,7 +127,8 @@ const defaultConfig = {
 export default function AIPage() {
   const [chatHistory, setChatHistory] = useState<Array<{ role: string; content: string }>>([]);
   const [message, setMessage] = useState("");
-  const [selectedModel, setSelectedModel] = useState(defaultConfig.selected_model);
+  const [selectedModel, setSelectedModel] = useState<Model>(AI_MODELS.text[0]); // Initialize with the first text model
+  const [selectedModelType, setSelectedModelType] = useState<Model['type']>('text');
   const [temporaryChat, setTemporaryChat] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -146,7 +159,7 @@ export default function AIPage() {
     //   const response = await fetch('/api/generate-text', {
     //     method: 'POST',
     //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ prompt: message, model: selectedModel }),
+    //     body: JSON.stringify({ prompt: message, model: selectedModel.name }),
     //   });
     //   const data = await response.json();
     //   const aiResponse = { role: "assistant", content: data.generatedText };
@@ -163,17 +176,27 @@ export default function AIPage() {
 
     await new Promise((resolve) => setTimeout(resolve, 2000)); // Simula atraso
 
-    const aiResponseContent = `Esta é uma resposta simulada do modelo ${selectedModel} para: "${message}".\n\n_Gerado em 2.00s com ${selectedModel}_`;
+    const aiResponseContent = `Esta é uma resposta simulada do modelo ${selectedModel.name} (${selectedModel.type}) para: "${message}".\n\n_Gerado em 2.00s com ${selectedModel.name}_`;
     const aiResponse = { role: "assistant", content: aiResponseContent };
     setChatHistory((prev) => [...prev, aiResponse]);
     toast.success("Resposta gerada!");
     setIsLoading(false);
   };
 
-  const handleQuickAction = async (actionType: string) => {
+  const handleQuickAction = async (actionType: Model['type']) => {
     let prompt = "";
     let toastMessage = "";
     let simulatedResult = "";
+
+    // Automatically select a model of the chosen type for quick actions
+    const modelsOfType = AI_MODELS[actionType];
+    if (modelsOfType.length > 0) {
+      setSelectedModel(modelsOfType[0]); // Select the first model of that type
+      setSelectedModelType(actionType);
+    } else {
+      toast.error(`Nenhum modelo do tipo ${actionType} disponível.`);
+      return;
+    }
 
     switch (actionType) {
       case "image":
@@ -186,30 +209,39 @@ export default function AIPage() {
         toastMessage = "Gerando vídeo...";
         simulatedResult = "🎬 Vídeo simulado gerado. (Requer backend para funcionalidade real)";
         break;
-      case "write":
-        prompt = "um parágrafo sobre o futuro da IA";
-        toastMessage = "Ajudando a escrever...";
-        simulatedResult = "✏️ Texto simulado gerado. (Requer backend para funcionalidade real)";
-        break;
-      case "summarize":
-        prompt = "o seguinte texto: 'Inteligência Artificial (IA) é um campo da ciência da computação dedicado à resolução de problemas cognitivos comumente associados à inteligência humana, como aprendizado, resolução de problemas e reconhecimento de padrões.'";
-        toastMessage = "Resumindo texto...";
-        simulatedResult = "📄 Resumo simulado gerado. (Requer backend para funcionalidade real)";
-        break;
-      case "analyze":
-        prompt = "o seguinte texto para análise de sentimento e entidades: 'O novo produto é excelente, mas o suporte ao cliente precisa melhorar.'";
-        toastMessage = "Analisando texto...";
-        simulatedResult = "📊 Análise de texto simulada. (Requer backend para funcionalidade real)";
-        break;
-      case "code":
-        prompt = "uma função JavaScript para calcular o fatorial de um número.";
-        toastMessage = "Gerando código...";
-        simulatedResult = "💻 Código simulado gerado. (Requer backend para funcionalidade real)";
-        break;
-      case "brainstorm":
-        prompt = "ideias para um novo aplicativo de produtividade.";
-        toastMessage = "Brainstorming...";
-        simulatedResult = "💡 Ideias simuladas gerado. (Requer backend para funcionalidade real)";
+      case "text": // For 'write', 'summarize', 'analyze', 'code', 'brainstorm'
+        // This case handles all text-based quick actions
+        if (actionType === "text") { // This check is redundant but for clarity
+          switch (arguments[0]) { // Access the original actionType passed to handleQuickAction
+            case "write":
+              prompt = "um parágrafo sobre o futuro da IA";
+              toastMessage = "Ajudando a escrever...";
+              simulatedResult = "✏️ Texto simulado gerado. (Requer backend para funcionalidade real)";
+              break;
+            case "summarize":
+              prompt = "o seguinte texto: 'Inteligência Artificial (IA) é um campo da ciência da computação dedicado à resolução de problemas cognitivos comumente associados à inteligência humana, como aprendizado, resolução de problemas e reconhecimento de padrões.'";
+              toastMessage = "Resumindo texto...";
+              simulatedResult = "📄 Resumo simulado gerado. (Requer backend para funcionalidade real)";
+              break;
+            case "analyze":
+              prompt = "o seguinte texto para análise de sentimento e entidades: 'O novo produto é excelente, mas o suporte ao cliente precisa melhorar.'";
+              toastMessage = "Analisando texto...";
+              simulatedResult = "📊 Análise de texto simulada. (Requer backend para funcionalidade real)";
+              break;
+            case "code":
+              prompt = "uma função JavaScript para calcular o fatorial de um número.";
+              toastMessage = "Gerando código...";
+              simulatedResult = "💻 Código simulado gerado. (Requer backend para funcionalidade real)";
+              break;
+            case "brainstorm":
+              prompt = "ideias para um novo aplicativo de produtividade.";
+              toastMessage = "Brainstorming...";
+              simulatedResult = "💡 Ideias simuladas gerado. (Requer backend para funcionalidade real)";
+              break;
+            default:
+              return;
+          }
+        }
         break;
       default:
         return;
@@ -221,7 +253,7 @@ export default function AIPage() {
 
     setChatHistory((prev) => [
       ...prev,
-      { role: "user", content: `Ação rápida: ${actionType} com prompt "${prompt}"` },
+      { role: "user", content: `Ação rápida: ${arguments[0]} com prompt "${prompt}"` },
       { role: "assistant", content: simulatedResult },
     ]);
     toast.success("Ação concluída!");
@@ -306,36 +338,92 @@ export default function AIPage() {
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium">
-              {selectedModel}
+              {selectedModel.type.charAt(0).toUpperCase() + selectedModel.type.slice(1)}: {selectedModel.name}
               <Info className="h-4 w-4 text-muted-foreground" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-2">
-            <div className="flex flex-col items-start gap-1">
-              <span className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground">Modelo</span>
-              <div className="flex w-full flex-col items-start gap-1 px-2">
-                {AI_MODELS.text.map((model) => (
-                  <Button
-                    key={model.name}
-                    variant="ghost"
-                    className={`w-full justify-start ${selectedModel === model.name ? "bg-accent text-accent-foreground" : ""}`}
-                    onClick={() => setSelectedModel(model.name)}
-                  >
-                    <div className="flex flex-col items-start">
-                      <span className="text-sm font-medium">{model.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {model.local ? "Local" : `API: ${model.api}`}
-                      </span>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-              <div className="w-full h-px bg-border my-2" />
-              <div className="flex w-full items-center gap-4 px-3 py-2">
-                <MessageCircle className="h-5 w-5 text-muted-foreground" />
-                <span className="grow text-sm text-foreground">Chat temporário</span>
-                <Switch checked={temporaryChat} onCheckedChange={setTemporaryChat} />
-              </div>
+            <Tabs value={selectedModelType} onValueChange={(value) => {
+              setSelectedModelType(value as Model['type']);
+              setSelectedModel(AI_MODELS[value as Model['type']][0]); // Select first model of new type
+            }} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="text">Texto</TabsTrigger>
+                <TabsTrigger value="image">Imagem</TabsTrigger>
+                <TabsTrigger value="video">Vídeo</TabsTrigger>
+              </TabsList>
+              <TabsContent value="text" className="p-0 border-none">
+                <div className="flex flex-col items-start gap-1">
+                  <span className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground">Modelos de Texto</span>
+                  <div className="flex w-full flex-col items-start gap-1 px-2">
+                    {AI_MODELS.text.map((model) => (
+                      <Button
+                        key={model.name}
+                        variant="ghost"
+                        className={`w-full justify-start ${selectedModel.name === model.name && selectedModel.type === model.type ? "bg-accent text-accent-foreground" : ""}`}
+                        onClick={() => setSelectedModel(model)}
+                      >
+                        <div className="flex flex-col items-start">
+                          <span className="text-sm font-medium">{model.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {model.local ? "Local" : `API: ${model.api}`}
+                          </span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+              <TabsContent value="image" className="p-0 border-none">
+                <div className="flex flex-col items-start gap-1">
+                  <span className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground">Modelos de Imagem</span>
+                  <div className="flex w-full flex-col items-start gap-1 px-2">
+                    {AI_MODELS.image.map((model) => (
+                      <Button
+                        key={model.name}
+                        variant="ghost"
+                        className={`w-full justify-start ${selectedModel.name === model.name && selectedModel.type === model.type ? "bg-accent text-accent-foreground" : ""}`}
+                        onClick={() => setSelectedModel(model)}
+                      >
+                        <div className="flex flex-col items-start">
+                          <span className="text-sm font-medium">{model.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {model.local ? "Local" : `API: ${model.api}`}
+                          </span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+              <TabsContent value="video" className="p-0 border-none">
+                <div className="flex flex-col items-start gap-1">
+                  <span className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground">Modelos de Vídeo</span>
+                  <div className="flex w-full flex-col items-start gap-1 px-2">
+                    {AI_MODELS.video.map((model) => (
+                      <Button
+                        key={model.name}
+                        variant="ghost"
+                        className={`w-full justify-start ${selectedModel.name === model.name && selectedModel.type === model.type ? "bg-accent text-accent-foreground" : ""}`}
+                        onClick={() => setSelectedModel(model)}
+                      >
+                        <div className="flex flex-col items-start">
+                          <span className="text-sm font-medium">{model.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {model.local ? "Local" : `API: ${model.api}`}
+                          </span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+            <div className="w-full h-px bg-border my-2" />
+            <div className="flex w-full items-center gap-4 px-3 py-2">
+              <MessageCircle className="h-5 w-5 text-muted-foreground" />
+              <span className="grow text-sm text-foreground">Chat temporário</span>
+              <Switch checked={temporaryChat} onCheckedChange={setTemporaryChat} />
             </div>
           </PopoverContent>
         </Popover>
@@ -461,19 +549,19 @@ export default function AIPage() {
               <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("video")}>
                 <Video className="h-4 w-4 text-purple-600" /> Gerar vídeo
               </Button>
-              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("write")}>
+              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("text")}>
                 <PencilLine className="h-4 w-4 text-blue-600" /> Ajudar a escrever
               </Button>
-              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("summarize")}>
+              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("text")}>
                 <FileText className="h-4 w-4 text-yellow-600" /> Resumir texto
               </Button>
-              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("analyze")}>
+              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("text")}>
                 <ScrollText className="h-4 w-4 text-orange-600" /> Analisar texto
               </Button>
-              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("code")}>
+              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("text")}>
                 <TerminalSquare className="h-4 w-4 text-gray-600" /> Código
               </Button>
-              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("brainstorm")}>
+              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("text")}>
                 <Lightbulb className="h-4 w-4 text-red-600" /> Brainstorm
               </Button>
             </div>
@@ -486,12 +574,12 @@ export default function AIPage() {
               ← Voltar ao Chat
             </Button>
             <Tabs defaultValue="model-settings" className="w-full">
-              <TabsList className="grid w-full grid-cols-5"> {/* Updated grid-cols to 5 */}
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="model-settings">⚙️ Configurações do Modelo</TabsTrigger>
                 <TabsTrigger value="upload-data">📁 Upload de Dados</TabsTrigger>
                 <TabsTrigger value="training">🧠 Treinamento</TabsTrigger>
                 <TabsTrigger value="logs">📜 Logs</TabsTrigger>
-                <TabsTrigger value="api-keys">🔑 Chaves de API</TabsTrigger> {/* New Tab Trigger */}
+                <TabsTrigger value="api-keys">🔑 Chaves de API</TabsTrigger>
                 <TabsTrigger value="customize">🎨 Customizar UI</TabsTrigger>
               </TabsList>
               <TabsContent value="model-settings" className="p-4 border rounded-md mt-4 bg-card">
