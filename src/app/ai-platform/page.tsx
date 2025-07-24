@@ -152,6 +152,7 @@ export default function AIPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [logsContent, setLogsContent] = useState("Nenhum log disponível.");
   const [metricsPlotUrl, setMetricsPlotUrl] = useState<string | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Novo estado para a barra lateral
 
 
   // Configurações do modelo (para a aba de configurações)
@@ -432,11 +433,22 @@ export default function AIPage() {
   return (
     <div className="flex h-screen w-full flex-col items-start bg-background text-foreground font-[family-name:var(--font-geist-sans)]">
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={18} minSize={15} maxSize={25}>
+        <ResizablePanel
+          defaultSize={18}
+          minSize={4} // Tamanho mínimo quando recolhido (para mostrar apenas o ícone)
+          maxSize={25} // Tamanho máximo quando expandido
+          collapsedSize={4} // Tamanho quando explicitamente recolhido
+          collapsible={true}
+          onCollapse={() => setIsSidebarCollapsed(true)}
+          onExpand={() => setIsSidebarCollapsed(false)}
+          // Removido: collapsed={isSidebarCollapsed}
+        >
           <MainSidebar
             activeView={activeView}
             onSelectView={setActiveView}
-            onSelectModelType={handleSelectModelTypeFromSidebar} {/* Usando a nova função */}
+            onSelectModelType={handleSelectModelTypeFromSidebar}
+            isCollapsed={isSidebarCollapsed} // Passa o estado de recolhimento
+            onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)} // Passa a função de alternar
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
