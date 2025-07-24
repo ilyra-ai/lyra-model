@@ -556,7 +556,65 @@ export default function AIPage() {
                   </div>
                 </div>
 
-                {/* Quick action buttons removed from here, now in sidebar */}
+                {/* Quick action buttons moved back here */}
+                <div className="flex grow shrink-0 basis-0 flex-wrap items-center justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-full px-3 py-2 shadow-sm"
+                    onClick={() => handleQuickAction("image")}
+                  >
+                    <Image className="h-4 w-4 text-green-600" />
+                    <span className="text-sm text-muted-foreground">Criar imagem</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-full px-3 py-2 shadow-sm"
+                    onClick={() => handleQuickAction("video")}
+                  >
+                    <Video className="h-4 w-4 text-purple-600" />
+                    <span className="text-sm text-muted-foreground">Gerar vídeo</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-full px-3 py-2 shadow-sm"
+                    onClick={() => handleQuickAction("write")}
+                  >
+                    <PencilLine className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm text-muted-foreground">Ajudar a escrever</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-full px-3 py-2 shadow-sm"
+                    onClick={() => handleQuickAction("summarize")}
+                  >
+                    <FileText className="h-4 w-4 text-yellow-600" />
+                    <span className="text-sm text-muted-foreground">Resumir texto</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-full px-3 py-2 shadow-sm"
+                    onClick={() => handleQuickAction("analyze")}
+                  >
+                    <ScrollText className="h-4 w-4 text-orange-600" />
+                    <span className="text-sm text-muted-foreground">Analisar texto</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-full px-3 py-2 shadow-sm"
+                    onClick={() => handleQuickAction("code")}
+                  >
+                    <TerminalSquare className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm text-muted-foreground">Código</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-full px-3 py-2 shadow-sm"
+                    onClick={() => handleQuickAction("brainstorm")}
+                  >
+                    <Lightbulb className="h-4 w-4 text-red-600" />
+                    <span className="text-sm text-muted-foreground">Brainstorm</span>
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (

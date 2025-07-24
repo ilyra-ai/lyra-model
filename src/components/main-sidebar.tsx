@@ -5,22 +5,18 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   MessageCircle, Settings, Cloud, Sparkles, ScrollText, Key, Palette,
-  Image, Video, PencilLine, FileText, ScrollText as AnalyzeTextIcon, TerminalSquare, Lightbulb
+  UserCog2, Book, Laptop, LogOut
 } from "lucide-react";
 
 interface MainSidebarProps {
   activeView: string;
   onSelectView: (view: string) => void;
-  onSelectModelType: (type: "text" | "image" | "video") => void;
+  onSelectModelType: (type: "text" | "image" | "video") => void; // Still needed for model selection in header
 }
 
 export function MainSidebar({ activeView, onSelectView, onSelectModelType }: MainSidebarProps) {
-  const handleQuickActionClick = (actionIdentifier: string, modelType: "text" | "image" | "video") => {
-    onSelectModelType(modelType); // Set the model type first
-    onSelectView('chat'); // Always go back to chat view for quick actions
-    // The actual prompt/simulated result logic will remain in ai-platform/page.tsx
-    // as it depends on the message input and chat history.
-  };
+  // handleQuickActionClick is no longer needed here as quick actions are moved to chat area
+  // The onSelectModelType prop is kept as it might be used by the header's model selection logic.
 
   return (
     <div className="flex h-full flex-col border-r border-border bg-sidebar text-sidebar-foreground">
@@ -38,66 +34,6 @@ export function MainSidebar({ activeView, onSelectView, onSelectModelType }: Mai
         >
           <MessageCircle className="h-4 w-4" />
           Chat
-        </Button>
-
-        <div className="my-2 h-px w-full bg-sidebar-border" />
-
-        <span className="px-3 py-2 text-xs font-semibold text-muted-foreground">Ações Rápidas</span>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2"
-          onClick={() => handleQuickActionClick("image", "image")}
-        >
-          <Image className="h-4 w-4 text-green-600" />
-          Criar imagem
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2"
-          onClick={() => handleQuickActionClick("video", "video")}
-        >
-          <Video className="h-4 w-4 text-purple-600" />
-          Gerar vídeo
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2"
-          onClick={() => handleQuickActionClick("write", "text")}
-        >
-          <PencilLine className="h-4 w-4 text-blue-600" />
-          Ajudar a escrever
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2"
-          onClick={() => handleQuickActionClick("summarize", "text")}
-        >
-          <FileText className="h-4 w-4 text-yellow-600" />
-          Resumir texto
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2"
-          onClick={() => handleQuickActionClick("analyze", "text")}
-        >
-          <AnalyzeTextIcon className="h-4 w-4 text-orange-600" />
-          Analisar texto
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2"
-          onClick={() => handleQuickActionClick("code", "text")}
-        >
-          <TerminalSquare className="h-4 w-4 text-gray-600" />
-          Código
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2"
-          onClick={() => handleQuickActionClick("brainstorm", "text")}
-        >
-          <Lightbulb className="h-4 w-4 text-red-600" />
-          Brainstorm
         </Button>
 
         <div className="my-2 h-px w-full bg-sidebar-border" />
