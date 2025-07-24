@@ -173,45 +173,35 @@ export default function AIPage() {
   const [downloadUrlInput, setDownloadUrlInput] = useState("");
 
 
-  const handleSendMessage = async () => {
-    if (!message.trim()) return;
+    const handleSendMessage = async () => {
+      if (!message.trim()) return;
 
-    const userMessage = { role: "user", content: message };
-    setChatHistory((prev) => [...prev, userMessage]);
-    setMessage("");
-    setIsLoading(true);
-    toast.info("Processando sua solicitação...");
+      const userMessage = { role: 'user', content: message };
+      setChatHistory((prev) => [...prev, userMessage]);
+      setMessage('');
+      setIsLoading(true);
+      toast.info('Processando sua solicitação...');
 
-    // Simulação de chamada de API para o backend Python
-    // No mundo real, você faria uma requisição fetch/axios para seu servidor Python aqui.
-    // Exemplo:
-    // try {
-    //   const response = await fetch('/api/generate-text', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ prompt: message, model: selectedModel.name }),
-    //   });
-    //   const data = await response.json();
-    //   const aiResponse = { role: "assistant", content: data.generatedText };
-    //   setChatHistory((prev) => [...prev, aiResponse]);
-    //   toast.success("Resposta gerada!");
-    // } catch (error) {
-    //   console.error("Erro ao gerar resposta:", error);
-    //   const errorMessage = { role: "assistant", content: "❌ Erro ao gerar resposta. Verifique o backend." };
-    //   setChatHistory((prev) => [...prev, errorMessage]);
-    //   toast.error("Erro ao gerar resposta!");
-    // } finally {
-    //   setIsLoading(false);
-    // }
-
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Simula atraso
-
-    const aiResponseContent = `Esta é uma resposta simulada do modelo ${selectedModel.name} (${selectedModel.type}) para: "${message}".\n\n_Gerado em 2.00s com ${selectedModel.name}_`;
-    const aiResponse = { role: "assistant", content: aiResponseContent };
-    setChatHistory((prev) => [...prev, aiResponse]);
-    toast.success("Resposta gerada!");
-    setIsLoading(false);
-  };
+      try {
+        const response = await fetch('/api/generate-text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: message, model: selectedModel.name }),
+        });
+        if (!response.ok) throw new Error(`Erro ${response.status}`);
+        const data = await response.json();
+        const aiResponse = { role: 'assistant', content: data.text };
+        setChatHistory((prev) => [...prev, aiResponse]);
+        toast.success('Resposta gerada!');
+      } catch (error) {
+        console.error('Erro ao gerar resposta:', error);
+        const errorMessage = { role: 'assistant', content: '❌ Erro ao gerar resposta.' };
+        setChatHistory((prev) => [...prev, errorMessage]);
+        toast.error('Erro ao gerar resposta!');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
   const handleQuickAction = async (actionIdentifier: string) => {
     let prompt = "";
@@ -768,7 +758,7 @@ export default function AIPage() {
                           max={1024}
                           step={64}
                           value={[modelConfig.d_model]}
-                          onValueChange={(val) => setModelConfig({ ...model(val) })}
+                          onValueChange={(val) => setModelConfig({ ...modelConfig, d_model: val[0] })}
                         />
                       </div>
                       <div>
