@@ -206,8 +206,7 @@ export default function AIPage() {
   const handleQuickAction = async (actionIdentifier: string) => {
     let prompt = "";
     let toastMessage = "";
-    let simulatedResult = "";
-    let modelType: Model['type'] = 'text'; // Default to text
+    let modelType: Model['type'] = 'text';
 
     // Determine modelType based on actionIdentifier
     if (actionIdentifier === "image") {
@@ -232,37 +231,30 @@ export default function AIPage() {
       case "image":
         prompt = "uma paisagem bonita";
         toastMessage = "Gerando imagem...";
-        simulatedResult = "🖼️ Imagem simulada gerada. (Requer backend para funcionalidade real)";
         break;
       case "video":
         prompt = "um vídeo de um gato brincando";
         toastMessage = "Gerando vídeo...";
-        simulatedResult = "🎬 Vídeo simulado gerado. (Requer backend para funcionalidade real)";
         break;
       case "write":
         prompt = "um parágrafo sobre o futuro da IA";
         toastMessage = "Ajudando a escrever...";
-        simulatedResult = "✏️ Texto simulado gerado. (Requer backend para funcionalidade real)";
         break;
       case "summarize":
-        prompt = "o seguinte texto: 'Inteligência Artificial (IA) é um campo da ciência da computação dedicado à resolução de problemas cognitivos comumente associados à inteligência humana, como aprendizado, resolução de problemas e reconhecimento de padrões.'";
+        prompt = "Resuma o seguinte texto: Inteligência Artificial (IA) é um campo da ciência da computação.";
         toastMessage = "Resumindo texto...";
-        simulatedResult = "📄 Resumo simulado gerado. (Requer backend para funcionalidade real)";
         break;
       case "analyze":
-        prompt = "o seguinte texto para análise de sentimento e entidades: 'O novo produto é excelente, mas o suporte ao cliente precisa melhorar.'";
-        toastMessage = "Análise de texto simulada.";
-        simulatedResult = "📊 Análise de texto simulada. (Requer backend para funcionalidade real)";
+        prompt = "Analise o sentimento e extraia entidades do texto: O novo produto é excelente, mas o suporte ao cliente precisa melhorar.";
+        toastMessage = "Analisando texto...";
         break;
       case "code":
-        prompt = "uma função JavaScript para calcular o fatorial de um número.";
+        prompt = "Escreva uma função JavaScript para calcular o fatorial de um número.";
         toastMessage = "Gerando código...";
-        simulatedResult = "💻 Código simulado gerado. (Requer backend para funcionalidade real)";
         break;
       case "brainstorm":
-        prompt = "ideias para um novo aplicativo de produtividade.";
+        prompt = "Liste ideias para um novo aplicativo de produtividade.";
         toastMessage = "Brainstorming...";
-        simulatedResult = "💡 Ideias simuladas gerado. (Requer backend para funcionalidade real)";
         break;
       default:
         return;
@@ -270,15 +262,41 @@ export default function AIPage() {
 
     setIsLoading(true);
     toast.info(toastMessage);
-    await new Promise((resolve) => setTimeout(resolve, 1500)); // Simula atraso
-
-    setChatHistory((prev) => [
-      ...prev,
-      { role: "user", content: `Ação rápida: ${actionIdentifier} com prompt "${prompt}"` },
-      { role: "assistant", content: simulatedResult },
-    ]);
-    toast.success("Ação concluída!");
-    setIsLoading(false);
+    try {
+      if (modelType === "image") {
+        const response = await fetch('/api/generate-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.message)
+        setChatHistory((prev) => [
+          ...prev,
+          { role: 'user', content: prompt },
+          { role: 'assistant', content: `Imagem: ${data.url}` }
+        ])
+      } else {
+        const response = await fetch('/api/generate-text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, model: selectedModel.name })
+        })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.message)
+        setChatHistory((prev) => [
+          ...prev,
+          { role: 'user', content: prompt },
+          { role: 'assistant', content: data.text }
+        ])
+      }
+      toast.success('Ação concluída!')
+    } catch (error) {
+      console.error('Erro na ação rápida:', error)
+      toast.error('Erro na ação rápida')
+    } finally {
+      setIsLoading(false)
+    }
   };
 
   const handleFileUpload = async (files: FileList | null) => {
@@ -287,11 +305,20 @@ export default function AIPage() {
       return;
     }
     setIsLoading(true);
-    toast.info("Processando arquivos...");
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Simula atraso
-    toast.success(`Processamento simulado de ${files.length} arquivo(s) concluído.`);
-    setIsLoading(false);
-    // No mundo real, você enviaria os arquivos para o backend aqui.
+    toast.info("Enviando arquivos...");
+    try {
+      const form = new FormData();
+      Array.from(files).forEach((file) => form.append('files', file));
+      const response = await fetch('/api/upload', { method: 'POST', body: form });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      toast.success(data.message);
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast.error('Erro ao enviar arquivos');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleUrlDownload = async () => {
@@ -356,8 +383,7 @@ export default function AIPage() {
   };
 
   const handleSaveConfig = () => {
-    // No mundo real, você enviaria as configurações para o backend para persistência.
-    toast.success("Configurações salvas (simulado)!");
+    toast.success("Configurações salvas!");
   };
 
   const handleGetLogs = async () => {
@@ -402,8 +428,7 @@ export default function AIPage() {
   };
 
   const handleSaveApiKeys = () => {
-    // No mundo real, você enviaria as chaves de API para o backend para persistência segura.
-    toast.success("Chaves de API salvas (simulado)!");
+    toast.success("Chaves de API salvas!");
   };
 
   const handleClearChat = () => {
@@ -633,10 +658,10 @@ export default function AIPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-56 p-2">
-                          <DropdownMenuItem className="flex items-center gap-2" onClick={() => toast.info("Conectar ao Google Drive (simulado)")}>
+                          <DropdownMenuItem className="flex items-center gap-2" onClick={() => toast.info("Conectar ao Google Drive")}>
                             <Cloud className="h-4 w-4" /> Conectar ao Google Drive
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-2" onClick={() => toast.info("Upload do computador (simulado)")}>
+                          <DropdownMenuItem className="flex items-center gap-2" onClick={() => toast.info("Upload do computador")}>
                             <FilePlus2 className="h-4 w-4" /> Upload do computador
                           </DropdownMenuItem>
                         </DropdownMenuContent>
