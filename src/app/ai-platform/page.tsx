@@ -146,6 +146,11 @@ export default function AIPage() {
   const [uiConfig, setUiConfig] = useState(defaultConfig.ui);
   const [apiKeys, setApiKeys] = useState(defaultConfig.api_keys);
 
+  // Novos estados para URL do Dataset e Modelo Base para Fine-tuning
+  const [datasetUrl, setDatasetUrl] = useState("https://huggingface.co/datasets/oscar-corpus/OSCAR-2301/resolve/main/br_meta/br_meta.jsonl.zst");
+  const [fineTuneBase, setFineTuneBase] = useState("Nenhum");
+
+
   const handleSendMessage = async () => {
     if (!message.trim()) return;
 
@@ -297,7 +302,7 @@ export default function AIPage() {
       const response = await fetch('/api/train', { // Endpoint hipotético para iniciar o treinamento
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ modelConfig, trainingConfig }), // Envia as configurações do modelo e treinamento
+        body: JSON.stringify({ modelConfig, trainingConfig, datasetUrl, fineTuneBase }), // Envia as configurações do modelo e treinamento
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -799,12 +804,18 @@ export default function AIPage() {
                         <Input
                           id="dataset_url"
                           placeholder="https://huggingface.co/datasets/oscar-corpus/OSCAR-2301/resolve/main/br_meta/br_meta.jsonl.zst"
-                          defaultValue="https://huggingface.co/datasets/oscar-corpus/OSCAR-2301/resolve/main/br_meta/br_meta.jsonl.zst"
+                          value={datasetUrl}
+                          onChange={(e) => setDatasetUrl(e.target.value)}
                         />
                       </div>
                       <div>
                         <Label htmlFor="fine_tune_base">Modelo Base para Fine-tuning</Label>
-                        <Input id="fine_tune_base" placeholder="Nenhum" defaultValue="Nenhum" />
+                        <Input
+                          id="fine_tune_base"
+                          placeholder="Nenhum"
+                          value={fineTuneBase}
+                          onChange={(e) => setFineTuneBase(e.target.value)}
+                        />
                       </div>
                       <Button onClick={handleTrainModel} className="w-full" disabled={isLoading}>
                         <Sparkles className="h-4 w-4 mr-2" /> Iniciar Treinamento
