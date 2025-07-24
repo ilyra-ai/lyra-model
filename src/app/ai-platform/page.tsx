@@ -17,7 +17,8 @@ import {
   Info, MessageCircle, UserCog2, Book, Settings,
   Laptop, Sparkles, LogOut, Cloud, FilePlus2,
   Paperclip, Globe, ArrowUp, Image, PencilLine,
-  FileText, TerminalSquare, Lightbulb, Upload, Download
+  FileText, TerminalSquare, Lightbulb, Upload, Download,
+  Video, ScrollText, Trash2
 } from "lucide-react";
 
 // Placeholder para os modelos de IA (adaptado do script Python)
@@ -70,6 +71,9 @@ export default function AIPage() {
   const [temporaryChat, setTemporaryChat] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [logsContent, setLogsContent] = useState("Nenhum log disponível.");
+  const [metricsPlotUrl, setMetricsPlotUrl] = useState<string | null>(null);
+
 
   // Configurações do modelo (para a aba de configurações)
   const [modelConfig, setModelConfig] = useState(defaultConfig.model);
@@ -128,6 +132,11 @@ export default function AIPage() {
         toastMessage = "Gerando imagem...";
         simulatedResult = "🖼️ Imagem simulada gerada. (Requer backend para funcionalidade real)";
         break;
+      case "video":
+        prompt = "um vídeo de um gato brincando";
+        toastMessage = "Gerando vídeo...";
+        simulatedResult = "🎬 Vídeo simulado gerado. (Requer backend para funcionalidade real)";
+        break;
       case "write":
         prompt = "um parágrafo sobre o futuro da IA";
         toastMessage = "Ajudando a escrever...";
@@ -138,6 +147,11 @@ export default function AIPage() {
         toastMessage = "Resumindo texto...";
         simulatedResult = "📄 Resumo simulado gerado. (Requer backend para funcionalidade real)";
         break;
+      case "analyze":
+        prompt = "o seguinte texto para análise de sentimento e entidades: 'O novo produto é excelente, mas o suporte ao cliente precisa melhorar.'";
+        toastMessage = "Analisando texto...";
+        simulatedResult = "📊 Análise de texto simulada. (Requer backend para funcionalidade real)";
+        break;
       case "code":
         prompt = "uma função JavaScript para calcular o fatorial de um número.";
         toastMessage = "Gerando código...";
@@ -146,7 +160,7 @@ export default function AIPage() {
       case "brainstorm":
         prompt = "ideias para um novo aplicativo de produtividade.";
         toastMessage = "Brainstorming...";
-        simulatedResult = "💡 Ideias simuladas geradas. (Requer backend para funcionalidade real)";
+        simulatedResult = "💡 Ideias simuladas gerado. (Requer backend para funcionalidade real)";
         break;
       default:
         return;
@@ -198,11 +212,32 @@ export default function AIPage() {
     toast.success("Treinamento simulado concluído!");
     setIsLoading(false);
     // No mundo real, você iniciaria o treinamento no backend aqui.
+    // Para simular a geração de um gráfico, podemos definir uma URL de imagem de placeholder
+    setMetricsPlotUrl("/placeholder-metrics.png"); // Você precisaria de uma imagem de placeholder em /public
   };
 
   const handleSaveConfig = () => {
     // No mundo real, você enviaria as configurações para o backend para persistência.
     toast.success("Configurações salvas (simulado)!");
+  };
+
+  const handleGetLogs = async () => {
+    setIsLoading(true);
+    toast.info("Carregando logs...");
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simula atraso
+    const simulatedLogs = `[${new Date().toLocaleString()}] INFO - Log de exemplo 1\n[${new Date().toLocaleString()}] WARNING - Aviso de exemplo 2\n[${new Date().toLocaleString()}] ERROR - Erro de exemplo 3\n[${new Date().toLocaleString()}] INFO - Mais um log...`;
+    setLogsContent(simulatedLogs);
+    toast.success("Logs carregados (simulado)!");
+    setIsLoading(false);
+  };
+
+  const handleClearLogs = async () => {
+    setIsLoading(true);
+    toast.info("Limpando logs...");
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simula atraso
+    setLogsContent(`Logs limpos em ${new Date().toLocaleString()}\n`);
+    toast.success("Logs limpos (simulado)!");
+    setIsLoading(false);
   };
 
   return (
@@ -361,11 +396,17 @@ export default function AIPage() {
               <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("image")}>
                 <Image className="h-4 w-4 text-green-600" /> Criar imagem
               </Button>
+              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("video")}>
+                <Video className="h-4 w-4 text-purple-600" /> Gerar vídeo
+              </Button>
               <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("write")}>
                 <PencilLine className="h-4 w-4 text-blue-600" /> Ajudar a escrever
               </Button>
               <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("summarize")}>
                 <FileText className="h-4 w-4 text-yellow-600" /> Resumir texto
+              </Button>
+              <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("analyze")}>
+                <ScrollText className="h-4 w-4 text-orange-600" /> Analisar texto
               </Button>
               <Button variant="outline" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground shadow-sm" onClick={() => handleQuickAction("code")}>
                 <TerminalSquare className="h-4 w-4 text-gray-600" /> Código
@@ -387,6 +428,7 @@ export default function AIPage() {
                 <TabsTrigger value="model-settings">⚙️ Configurações do Modelo</TabsTrigger>
                 <TabsTrigger value="upload-data">📁 Upload de Dados</TabsTrigger>
                 <TabsTrigger value="training">🧠 Treinamento</TabsTrigger>
+                <TabsTrigger value="logs">📜 Logs</TabsTrigger>
                 <TabsTrigger value="customize">🎨 Customizar UI</TabsTrigger>
               </TabsList>
               <TabsContent value="model-settings" className="p-4 border rounded-md mt-4 bg-card">
@@ -529,6 +571,36 @@ export default function AIPage() {
                   <Button onClick={handleTrainModel} className="w-full">
                     <Sparkles className="h-4 w-4 mr-2" /> Iniciar Treinamento
                   </Button>
+                  {metricsPlotUrl && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-medium mb-2">Métricas de Treinamento</h3>
+                      <img src={metricsPlotUrl} alt="Training Metrics Plot" className="w-full h-auto rounded-md border" />
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Este gráfico é um placeholder. O gráfico real seria gerado pelo backend Python.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="logs" className="p-4 border rounded-md mt-4 bg-card">
+                <h2 className="text-xl font-semibold mb-4">Logs do Sistema</h2>
+                <div className="space-y-4">
+                  <Textarea
+                    id="logs_content"
+                    value={logsContent}
+                    readOnly
+                    rows={15}
+                    className="font-mono text-xs bg-muted/50 resize-y"
+                  />
+                  <div className="flex gap-2">
+                    <Button onClick={handleGetLogs} disabled={isLoading} className="flex-grow">
+                      <ScrollText className="h-4 w-4 mr-2" /> Carregar Logs
+                    </Button>
+                    <Button onClick={handleClearLogs} disabled={isLoading} variant="destructive" className="flex-grow">
+                      <Trash2 className="h-4 w-4 mr-2" /> Limpar Logs
+                    </Button>
+                  </div>
                 </div>
               </TabsContent>
 
