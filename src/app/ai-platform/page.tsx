@@ -332,15 +332,19 @@ export default function AIPage() {
     setIsLoading(true);
     toast.info("Iniciando treinamento do modelo...");
     try {
+      const baseModelForTraining = fineTuneBase === "Nenhum" ? null : fineTuneBase;
+
+      const requestBody = {
+        modelConfig,
+        trainingConfig,
+        datasetUrl,
+        fineTuneBase: baseModelForTraining,
+      };
+
       const response = await fetch('/api/train', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          modelConfig,
-          trainingConfig,
-          datasetUrl,
-          fineTuneBase: fineTuneBase === "Nenhum" ? null : fineTuneBase // Envia null se "Nenhum" for selecionado
-        }),
+        body: JSON.stringify(requestBody),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -349,8 +353,6 @@ export default function AIPage() {
       const data = await response.json();
       toast.success(data.message);
       setMetricsPlotUrl(data.metricsPlotUrl || null);
-      // Se fineTuneBase for null, o backend deve ter a lógica para identificar automaticamente
-      // ou usar um modelo base padrão.
     } catch (error) {
       console.error("Erro ao iniciar treinamento:", error);
       toast.error(`Erro ao iniciar treinamento: ${(error as Error).message}.`);
@@ -416,6 +418,17 @@ export default function AIPage() {
     toast.info("Histórico do chat limpo!");
   };
 
+  // Nova função para lidar com a seleção de tipo de modelo da sidebar
+  const handleSelectModelTypeFromSidebar = (type: Model['type']) => {
+    setSelectedModelType(type);
+    const modelsOfType = AI_MODELS[type];
+    if (modelsOfType.length > 0) {
+      setSelectedModel(modelsOfType[0]); // Seleciona o primeiro modelo do tipo
+    } else {
+      toast.error(`Nenhum modelo do tipo ${type} disponível.`);
+    }
+  };
+
   return (
     <div className="flex h-screen w-full flex-col items-start bg-background text-foreground font-[family-name:var(--font-geist-sans)]">
       <ResizablePanelGroup direction="horizontal">
@@ -423,7 +436,7 @@ export default function AIPage() {
           <MainSidebar
             activeView={activeView}
             onSelectView={setActiveView}
-            onSelectModelType={setSelectedModelType}
+            onSelectModelType={handleSelectModelTypeFromSidebar} {/* Usando a nova função */}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
