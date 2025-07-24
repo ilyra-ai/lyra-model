@@ -15,14 +15,18 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { MainSidebar } from "@/components/main-sidebar";
+import { cn } from "@/lib/utils"; // Import cn for conditional classnames
 
 import {
   Info, MessageCircle, UserCog2, Book, Settings,
   Laptop, Sparkles, LogOut, Cloud, FilePlus2,
   Paperclip, Globe, ArrowUp, Image, PencilLine,
   FileText, TerminalSquare, Lightbulb, Upload, Download,
-  Video, ScrollText, Trash2, Key, Eraser, Palette
+  Video, ScrollText, Trash2, Key, Eraser, Palette,
+  Check, ChevronsUpDown // Adicionado para o combobox
 } from "lucide-react";
+
+import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"; // Adicionado para o combobox
 
 // Interface para os modelos de IA
 interface Model {
@@ -127,6 +131,17 @@ const defaultConfig = {
   }
 };
 
+// Lista de modelos base para o combobox
+const BASE_MODELS_EXAMPLES = [
+  "GPT-3.5-turbo", "GPT-4", "Claude-3-Opus", "Llama-3-8B", "Mistral-7B",
+  "Falcon-40B", "Bloom-7B1", "T5-Large", "BERT-Base", "RoBERTa-Large",
+  "DistilBERT", "XLM-RoBERTa", "Electra-Base", "DeBERTa-v3-Large", "GPT-Neo-2.7B",
+  "GPT-J-6B", "Dolly-v2-12B", "MPT-7B", "Stable-Diffusion-XL", "DALL-E-3",
+  "Imagen-2", "Whisper-Large", "BART-Large", "Pegasus-Large", "T5-v1.1-Large",
+  "Flan-T5-XL", "Gemma-7B", "Mixtral-8x7B", "CodeLlama-7B", "Phi-2"
+];
+
+
 export default function AIPage() {
   const [chatHistory, setChatHistory] = useState<Array<{ role: string; content: string }>>([]);
   const [message, setMessage] = useState("");
@@ -149,6 +164,7 @@ export default function AIPage() {
   // Novos estados para URL do Dataset e Modelo Base para Fine-tuning
   const [datasetUrl, setDatasetUrl] = useState("https://huggingface.co/datasets/oscar-corpus/OSCAR-2301/resolve/main/br_meta/br_meta.jsonl.zst");
   const [fineTuneBase, setFineTuneBase] = useState("Nenhum");
+  const [openCombobox, setOpenCombobox] = useState(false); // Estado para o combobox
 
 
   const handleSendMessage = async () => {
@@ -809,12 +825,51 @@ export default function AIPage() {
                       </div>
                       <div>
                         <Label htmlFor="fine_tune_base">Modelo Base para Fine-tuning</Label>
-                        <Input
-                          id="fine_tune_base"
-                          placeholder="Nenhum"
-                          value={fineTuneBase}
-                          onChange={(e) => setFineTuneBase(e.target.value)}
-                        />
+                        <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openCombobox}
+                              className="w-full justify-between"
+                            >
+                              {fineTuneBase || "Selecione um modelo..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Buscar ou digitar modelo..."
+                                value={fineTuneBase}
+                                onValueChange={setFineTuneBase}
+                              />
+                              <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
+                              <CommandGroup>
+                                <CommandList>
+                                  {BASE_MODELS_EXAMPLES.map((model) => (
+                                    <CommandItem
+                                      key={model}
+                                      value={model}
+                                      onSelect={(currentValue) => {
+                                        setFineTuneBase(currentValue);
+                                        setOpenCombobox(false);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          fineTuneBase.toLowerCase() === model.toLowerCase() ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {model}
+                                    </CommandItem>
+                                  ))}
+                                </CommandList>
+                              </CommandGroup>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       <Button onClick={handleTrainModel} className="w-full" disabled={isLoading}>
                         <Sparkles className="h-4 w-4 mr-2" /> Iniciar Treinamento
