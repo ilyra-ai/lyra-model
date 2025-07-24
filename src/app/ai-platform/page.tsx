@@ -506,7 +506,7 @@ export default function AIPage() {
                   </div>
                 )}
 
-                <div className="flex w-full max-w-3xl flex-col items-start rounded-lg border border-input bg-card p-3 shadow-sm">
+                <div className="flex w-full max-w-3xl flex-col items-start rounded-md border border-input bg-card p-3 shadow-sm">
                   <div className="flex w-full flex-col items-start gap-2 px-2 py-2">
                     <Textarea
                       placeholder="Mensagem para a Plataforma de IA"
@@ -547,7 +547,7 @@ export default function AIPage() {
                     <Button
                       variant="default"
                       size="icon"
-                      className="h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                      className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
                       onClick={handleSendMessage}
                       disabled={isLoading || !message.trim()}
                     >
